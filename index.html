@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>SUSA Ryder CUP</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ryder CUP">
+<script>
+if ('serviceWorker' in navigator) {
+  const swCode = `self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>e.respondWith(fetch(e.request)));`;
+  const swBlob = new Blob([swCode], {type: 'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+}
+</script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:Arial,sans-serif; background:#1a1a2e; color:#fff; min-height:100vh; -webkit-overflow-scrolling:touch; }
+
+/* ── SETUP ── */
+#setup { max-width:460px; margin:0 auto; padding:32px 24px; }
+
+/* ── TÍTULO RYDER CUP ── */
+.ryder-title {
+  text-align:center; margin-bottom:28px; padding:12px 0;
+}
+.ryder-title h1 {
+  font-size:28px; font-weight:900; letter-spacing:2px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffec6e 40%, #c8960c 70%, #ffd700 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; text-shadow:none;
+  line-height:1.2; text-transform:uppercase;
+}
+.ryder-title .subtitle {
+  font-size:13px; color:#a8a8d8; margin-top:4px; letter-spacing:3px;
+  -webkit-text-fill-color:#a8a8d8;
+}
+.ryder-cups { font-size:22px; margin-bottom:4px; }
+
+/* ── CANCHA ── */
+.field-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.field-row label { color:#a8a8d8; font-size:14px; white-space:nowrap; min-width:64px; }
+select, input[type="text"], input[type="number"] {
+  background:#e8e8f5; color:#1a1a3a; border:none; border-radius:4px;
+  padding:7px 10px; font-size:16px; -webkit-appearance:none; appearance:none;
+}
+select {
+  width:100%; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%231a1a3a' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; padding-right:28px;
+}
+
+/* ── GRUPOS JUGADORES ── */
+.group-band {
+  border-radius:10px; margin-bottom:14px; overflow:hidden;
+}
+.group-header {
+  padding:8px 14px; font-size:16px; font-weight:900; letter-spacing:2px;
+  display:flex; align-items:center; gap:8px;
+}
+.group-header.tinto { background:#5a1010; color:#ff9999; border-bottom:2px solid #8B1a1a; }
+.group-header.rose  { background:#4a102e; color:#ffb0d0; border-bottom:2px solid #9d3b5b; }
+.group-header .match-hint { font-size:11px; font-weight:normal; opacity:0.8; margin-left:auto; }
+
+.player-tbl { width:100%; border-collapse:collapse; }
+.player-tbl th {
+  font-size:12px; font-weight:bold; padding:5px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);
+}
+.player-tbl td { padding:6px 10px; color:#fff; font-size:14px; }
+.player-tbl.tinto { background:#3d0808; }
+.player-tbl.rose  { background:#3d0820; }
+.player-tbl.tinto th { color:#ff9999; }
+.player-tbl.rose  th { color:#ffb0d0; }
+
+input.ini { width:80px; text-transform:uppercase; }
+input.hcp-in { width:70px; }
+
+/* ── MATCH PAIRING HINT ── */
+.pairing-hint {
+  text-align:center; font-size:12px; color:#a8a8c8; margin:8px 0 16px;
+  background:#1a1a3a; border-radius:6px; padding:8px;
+  border:1px solid #333360;
+}
+.pairing-hint span.tinto-txt { color:#ff9999; font-weight:bold; }
+.pairing-hint span.rose-txt  { color:#ffb0d0; font-weight:bold; }
+
+/* ── HCP VERIFY ── */
+.hcp-verify-label {
+  color:#ffd700; font-size:14px; font-weight:bold;
+  text-align:center; margin:4px 0 10px; letter-spacing:.5px;
+}
+.hcp-verify-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:20px; }
+.hcp-vtbl { width:100%; border-collapse:collapse; font-size:13px; }
+.hcp-vtbl th {
+  background:#0d0d2a; color:#a8a8d8; padding:6px 4px;
+  text-align:center; font-size:12px; border-bottom:1px solid #333360;
+}
+.hcp-vtbl th.sep { width:12px; background:#1a1a2e; border:none; }
+.hcp-vtbl td { padding:4px 2px; text-align:center; }
+.hcp-vtbl tr:nth-child(even) td { background:#22223a; }
+.hcp-vtbl tr:nth-child(odd)  td { background:#1a1a2e; }
+.hcp-vtbl td.sep { background:#1a1a2e !important; width:12px; }
+.hcp-vtbl td.hnum { color:#a8a8d8; font-size:12px; font-weight:bold; }
+input.hv {
+  width:46px; text-align:center; background:#e8e8f5; color:#1a1a3a;
+  border:none; border-radius:3px; padding:4px 0; font-size:15px; font-weight:bold;
+  -webkit-appearance:none; appearance:none;
+}
+input.hv:focus { outline:2px solid #ffd700; }
+
+.btn-hcp-row { display:flex; gap:8px; margin-bottom:12px; }
+.btn-save {
+  flex:1; padding:9px 8px; background:#1a1a5a; color:#a8a8ff;
+  font-size:13px; font-weight:bold; border:none; border-radius:8px;
+  cursor:pointer; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.btn-save:active { background:#2a2a7a; }
+.btn-reset {
+  flex:1; padding:9px 8px; background:#3a1a1a; color:#f08080;
+  font-size:13px; font-weight:bold; border:none; border-radius:8px;
+  cursor:pointer; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.btn-reset:active { background:#5a2a2a; }
+#save-toast {
+  display:none; text-align:center; color:#90ee90;
+  font-size:13px; font-weight:bold; margin:-8px 0 10px;
+}
+
+.btn-bottom-row { display:flex; gap:8px; align-items:stretch; }
+.btn-instrucciones {
+  flex:1; padding:9px 8px; background:#1a2a5a; color:#87ceeb;
+  font-size:13px; font-weight:bold; border:none; border-radius:8px;
+  cursor:pointer; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.btn-instrucciones:active { background:#254d7a; }
+.btn-start {
+  padding:16px 22px; background:#4a1a1a; color:#ffd700;
+  font-size:18px; font-weight:bold; border:2px solid #ffd700; border-radius:8px;
+  cursor:pointer; letter-spacing:1px; touch-action:manipulation;
+  -webkit-user-select:none; user-select:none; white-space:nowrap;
+}
+.btn-start:active { background:#6a2a2a; }
+
+/* ── MODAL INSTRUCCIONES ── */
+#modal-instrucciones {
+  display:none; position:fixed; inset:0; z-index:1000;
+  background:rgba(0,0,0,0.85); justify-content:center; align-items:center; padding:16px;
+}
+#modal-instrucciones.open { display:flex; }
+.modal-box {
+  background:#0d0d2a; border:1px solid #333360; border-radius:12px;
+  padding:22px 18px; max-width:420px; width:100%;
+  max-height:calc(100vh - 48px); overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.modal-box h2 { color:#ffd700; font-size:17px; text-align:center; margin-bottom:16px; letter-spacing:.5px; }
+.modal-box p  { color:#d8d8f8; font-size:14px; line-height:1.65; margin-bottom:10px; }
+.modal-box .m-bullet {
+  color:#d8d8f8; font-size:14px; line-height:1.65; margin:0 0 6px 8px; display:flex; gap:6px;
+}
+.modal-box .m-bullet span { flex-shrink:0; }
+.modal-box .m-mod { color:#ffd700; font-size:13px; font-weight:bold; margin:10px 0 3px; padding-left:4px; }
+.modal-box .m-mod-desc { color:#a8a8d8; font-size:13px; line-height:1.6; margin-bottom:4px; padding-left:8px; }
+.modal-close {
+  display:block; margin:18px auto 0; padding:10px 32px;
+  background:#4a1a1a; color:#ffd700; font-size:15px; font-weight:bold;
+  border:none; border-radius:8px; cursor:pointer; touch-action:manipulation;
+}
+.modal-close:active { background:#6a2a2a; }
+
+/* ── NUEVA CANCHA ── */
+#nc-overlay { display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.88); overflow-y:auto; padding:16px; -webkit-overflow-scrolling:touch; }
+#nc-overlay.open { display:block; }
+.nc-box { background:#0d0d2a; border:1px solid #333360; border-radius:12px; padding:20px 16px; max-width:420px; width:100%; margin:0 auto; }
+.nc-box h3 { color:#ffd700; font-size:16px; text-align:center; margin-bottom:14px; letter-spacing:.5px; }
+.nc-field { margin-bottom:12px; }
+.nc-field label { color:#a8a8d8; font-size:13px; display:block; margin-bottom:5px; font-weight:bold; }
+.nc-field input { width:100%; background:#e8e8f5; color:#1a1a3a; border:none; border-radius:6px; padding:9px 10px; font-size:15px; -webkit-appearance:none; appearance:none; }
+.nc-holes-hdr { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; margin-bottom:3px; }
+.nc-holes-hdr-col { display:grid; grid-template-columns:38px 46px 46px; gap:4px; }
+.nc-holes-hdr-col span { color:#ffd700; font-size:11px; font-weight:bold; text-align:center; }
+.nc-holes-hdr-col span:first-child { text-align:left; }
+.nc-holes-grid { display:grid; grid-template-columns:1fr 1fr; gap:3px 12px; margin-bottom:10px; }
+.nc-hole { display:grid; grid-template-columns:38px 46px 46px; align-items:center; gap:4px; }
+.nc-hole-lbl { color:#a8a8d8; font-size:12px; font-weight:bold; }
+.nc-hole input { background:#e8e8f5; color:#1a1a3a; border:none; border-radius:4px; padding:5px 0; font-size:14px; font-weight:bold; text-align:center; width:100%; -webkit-appearance:none; appearance:none; -moz-appearance:textfield; }
+.nc-hole input::-webkit-inner-spin-button, .nc-hole input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.nc-toast { text-align:center; font-size:13px; font-weight:bold; min-height:28px; padding:4px 0; }
+.nc-btn-row { display:flex; gap:8px; margin-top:8px; }
+.nc-btn-ok { flex:2; padding:12px; background:#4a1a1a; color:#ffd700; font-size:15px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; touch-action:manipulation; }
+.nc-btn-ok:active { background:#6a2a2a; }
+.nc-btn-cancel { flex:1; padding:12px; background:#3a1a1a; color:#f08080; font-size:14px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; touch-action:manipulation; }
+.nc-btn-cancel:active { background:#5a2a2a; }
+
+/* ── GESTIONAR CANCHAS ── */
+#gc-overlay { display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.88); overflow-y:auto; padding:16px; -webkit-overflow-scrolling:touch; }
+#gc-overlay.open { display:block; }
+.gc-box { background:#0d0d2a; border:1px solid #333360; border-radius:12px; padding:20px 16px; max-width:420px; width:100%; margin:0 auto; }
+.gc-box h3 { color:#ffd700; font-size:16px; text-align:center; margin-bottom:14px; }
+.gc-item { display:flex; justify-content:space-between; align-items:center; background:#1a1a3a; border-radius:8px; padding:11px 12px; margin-bottom:8px; }
+.gc-item-name { color:#e8e8ff; font-size:15px; }
+.gc-btn-del { background:#3a1a1a; color:#f08080; border:none; border-radius:6px; padding:8px 14px; font-size:14px; font-weight:bold; cursor:pointer; touch-action:manipulation; }
+.gc-empty { color:#a8a8d8; font-size:14px; text-align:center; padding:12px 0; }
+.gc-msg { text-align:center; font-size:13px; font-weight:bold; min-height:24px; padding:4px 0; color:#90ee90; }
+.gc-btn-close { width:100%; margin-top:12px; padding:13px; background:#4a1a1a; color:#ffd700; font-size:15px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; touch-action:manipulation; }
+
+/* ── SCORECARD ── */
+#scorecard { display:none; padding:14px 10px 30px; }
+#sc-title { display:none; }
+.sc-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table.sc { border-collapse:collapse; min-width:100%; font-size:15px; table-layout:fixed; }
+table.sc th { background:#0d0d2a; color:#a8a8d8; padding:6px 2px; text-align:center; font-size:16px; white-space:nowrap; }
+#sticky-sc-header { display:none; position:fixed; top:0; z-index:100; overflow:hidden; background:#0d0d2a; border-bottom:2px solid #333360; }
+#sticky-sc-header .sh-inner { overflow:hidden; }
+#sticky-sc-header table.sc { margin:0; }
+table.sc td { padding:4px 2px; text-align:center; white-space:nowrap; }
+table.sc th.c-fix, table.sc td.c-fix { width:26px; max-width:26px; font-size:16px; }
+table.sc th.c-player, table.sc td.c-player { width:50px; }
+table.sc th.c-team,   table.sc td.c-team   { width:72px; }
+table.sc th.c-match,  table.sc td.c-match  { width:72px; }
+table.sc td.lbl { text-align:left; padding-left:10px; font-weight:bold; }
+
+tr.r-even  td { background:#1c1c3a; }
+tr.r-odd   td { background:#141428; }
+tr.r-sub   td { background:#0a0a20; color:#ffd700; font-weight:bold; }
+tr.r-total td { background:#0d0d2a; color:#ffd700; font-weight:bold; font-size:16px; border-top:2px solid #333360; }
+tr.r-stbl  td { background:#07071e; color:#90ee90; font-weight:bold; font-size:15px; }
+tr.r-aag   td { background:#07071e; color:#87ceeb; font-weight:bold; font-size:15px; }
+tr.r-diff  td { background:#050518; color:#ffd700; font-weight:bold; font-size:16px; border-top:2px solid #ffd700; }
+
+/* score input */
+input.g {
+  width:44px; text-align:center; background:#e8e8f5; color:#1a1a3a;
+  border:none; border-radius:3px; padding:5px 0; font-size:18px; font-weight:bold;
+  -webkit-appearance:none; appearance:none; touch-action:manipulation; transition:background .2s;
+}
+input.g:focus { outline:2px solid #ffd700; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+input[type="number"] { -moz-appearance:textfield; }
+
+/* ── COLORES EQUIPO FOURBALL ── */
+td.tc-3 { background:#b85c00 !important; color:#fff    !important; font-weight:bold; font-size:17px; }
+td.tc-2 { background:#8a7200 !important; color:#ffd700 !important; font-weight:bold; font-size:17px; }
+td.tc-1 { background:#1e3a5c !important; color:#90ccff !important; font-weight:bold; font-size:17px; }
+td.tc-0 { color:#aaa !important; }
+
+/* ── COLORES MATCH ── */
+td.mc-win  { background:#3a1a00 !important; color:#ffd700 !important; font-weight:bold; font-size:17px; }
+td.mc-tie  { background:#2a2a10 !important; color:#c8c870 !important; font-weight:bold; font-size:15px; }
+td.mc-lose { color:#555 !important; }
+
+.sec-sep { margin-top:24px; padding-top:16px; border-top:2px solid #333360; }
+.sec-title { font-size:15px; font-weight:bold; text-align:center; margin-bottom:4px; letter-spacing:1px; }
+.sec-sub { font-size:11px; color:#a8a8d8; text-align:center; margin-bottom:10px; }
+.sec-legend { font-size:10px; color:#666; text-align:center; margin-top:6px; }
+
+/* ── EL NETO ── */
+#el-neto {
+  margin-top:28px; padding:20px 16px; border-radius:12px;
+  background:linear-gradient(135deg, #1a1a3a 0%, #0d0d20 100%);
+  border:2px solid #ffd700; text-align:center;
+}
+#el-neto .neto-label {
+  font-size:13px; letter-spacing:3px; color:#a8a8c8; text-transform:uppercase; margin-bottom:8px;
+}
+#el-neto .neto-title {
+  font-size:22px; font-weight:900; letter-spacing:2px;
+  background:linear-gradient(135deg, #ffd700, #ffec6e, #c8960c, #ffd700);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:16px;
+}
+.neto-team {
+  font-size:20px; font-weight:bold; padding:10px 16px; border-radius:8px;
+  margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;
+}
+.neto-team.tinto { background:#3d0808; border:1px solid #8B1a1a; }
+.neto-team.rose  { background:#3d0820; border:1px solid #9d3b5b; }
+.neto-team .team-name { font-size:16px; }
+.neto-team .team-pts  { font-size:28px; font-weight:900; color:#ffd700; }
+.neto-team.tinto .team-name { color:#ff9999; }
+.neto-team.rose  .team-name { color:#ffb0d0; }
+.neto-winner {
+  margin-top:12px; font-size:18px; font-weight:bold; color:#ffd700;
+  background:#1a1a00; border-radius:8px; padding:10px;
+  border:1px solid #ffd700; letter-spacing:1px;
+}
+
+.btn-new-row {
+  display:flex; gap:8px; margin:18px 0 0; justify-content:center;
+}
+.btn-new {
+  flex:1; padding:10px 8px;
+  background:#2d2d6a; color:#fff; font-size:13px; font-weight:bold;
+  border:none; border-radius:8px; cursor:pointer; line-height:1.3;
+  touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.btn-new:active { background:#3d3d8a; }
+.btn-back {
+  flex:1; padding:10px 8px;
+  background:#1a3a5a; color:#7ec8ff; font-size:13px; font-weight:bold;
+  border:2px solid #7ec8ff; border-radius:8px; cursor:pointer; line-height:1.3;
+  touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.btn-back:active { background:#2a4a6a; }
+.btn-share {
+  flex:1; padding:10px 8px;
+  background:#1a4a2a; color:#25d366; font-size:13px; font-weight:bold;
+  border:2px solid #25d366; border-radius:8px; cursor:pointer; line-height:1.3;
+  touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+.btn-share:active { background:#0d3320; }
+
+/* ── MODAL MODO DE JUEGO ── */
+.mode-btn {
+  width:100%; padding:16px 12px; background:#1a1a3a; color:#ffd700;
+  font-size:16px; font-weight:bold; border:2px solid #333360; border-radius:10px;
+  cursor:pointer; touch-action:manipulation; display:block; text-align:center;
+  -webkit-user-select:none; user-select:none; line-height:1.4;
+}
+.mode-btn:active { background:#2d2d6a; }
+
+/* ── SCORECARD HEADER COLORS ── */
+th.h-tinto { color:#ff9999 !important; }
+th.h-rose  { color:#ffb0d0 !important; }
+</style>
+</head>
+<body>
+
+<!-- ── SETUP ── -->
+<div id="setup">
+  <div class="ryder-title">
+    <div class="ryder-cups">🍷🌸</div>
+    <h1>SUSA Ryder CUP</h1>
+    <div class="subtitle">G.C.C. · S.U.A.S.A.</div>
+  </div>
+
+  <div class="field-row">
+    <label for="csel">Cancha:</label>
+    <select id="csel" onchange="onCselChange()"></select>
+  </div>
+
+  <!-- GRUPO TINTO -->
+  <div class="group-band">
+    <div class="group-header tinto">
+      🍷 TINTO
+      <span class="match-hint">Match: J1 vs J3 &nbsp;·&nbsp; J2 vs J4</span>
+    </div>
+    <table class="player-tbl tinto">
+      <thead><tr><th>Jugador</th><th>Iniciales</th><th>HCP</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>J1 (Tinto)</td>
+          <td><input class="ini" type="text" id="ini0" maxlength="7" autocorrect="off" autocapitalize="characters"></td>
+          <td><input class="hcp-in" type="number" id="hcp0" placeholder="0" min="0" max="54" inputmode="numeric"></td>
+        </tr>
+        <tr>
+          <td>J2 (Tinto)</td>
+          <td><input class="ini" type="text" id="ini1" maxlength="7" autocorrect="off" autocapitalize="characters"></td>
+          <td><input class="hcp-in" type="number" id="hcp1" placeholder="0" min="0" max="54" inputmode="numeric"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- GRUPO ROSÉ -->
+  <div class="group-band">
+    <div class="group-header rose">
+      🌸 ROSÉ
+      <span class="match-hint">J1 🍷 vs J3 🌸 &nbsp;·&nbsp; J2 🍷 vs J4 🌸</span>
+    </div>
+    <table class="player-tbl rose">
+      <thead><tr><th>Jugador</th><th>Iniciales</th><th>HCP</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>J3 (Rosé)</td>
+          <td><input class="ini" type="text" id="ini2" maxlength="7" autocorrect="off" autocapitalize="characters"></td>
+          <td><input class="hcp-in" type="number" id="hcp2" placeholder="0" min="0" max="54" inputmode="numeric"></td>
+        </tr>
+        <tr>
+          <td>J4 (Rosé)</td>
+          <td><input class="ini" type="text" id="ini3" maxlength="7" autocorrect="off" autocapitalize="characters"></td>
+          <td><input class="hcp-in" type="number" id="hcp3" placeholder="0" min="0" max="54" inputmode="numeric"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pairing-hint">
+    ⚔️ <span class="tinto-txt">J1</span> 🍷 vs <span class="rose-txt">J3</span> 🌸 &nbsp;·&nbsp;
+    <span class="tinto-txt">J2</span> 🍷 vs <span class="rose-txt">J4</span> 🌸 &nbsp;·&nbsp;
+    ⛳ Fourball: <span class="tinto-txt">Tinto</span> vs <span class="rose-txt">Rosé</span>
+  </div>
+
+  <p class="hcp-verify-label">Verifique los Hcp de los Hoyos</p>
+  <div class="hcp-verify-wrap">
+    <table class="hcp-vtbl">
+      <thead>
+        <tr><th>Hoyo</th><th>Hcp</th><th class="sep"></th><th>Hoyo</th><th>Hcp</th></tr>
+      </thead>
+      <tbody id="hcp-rows"></tbody>
+    </table>
+  </div>
+
+  <div class="btn-hcp-row">
+    <button class="btn-save" onclick="saveCourse()">💾 Guardar Hcp</button>
+    <button class="btn-reset" onclick="resetCourse()">↩ Restablecer Hcp</button>
+  </div>
+  <div id="save-toast">✅ Guardado</div>
+  <div class="btn-bottom-row">
+    <button class="btn-instrucciones" onclick="openInstructions()">📋 Instrucciones</button>
+    <button class="btn-start" onclick="startGame()">ANOTAR &nbsp;▶</button>
+  </div>
+</div>
+
+<!-- ── GESTIONAR CANCHAS ── -->
+<div id="gc-overlay">
+  <div class="gc-box">
+    <h3>🗑 Canchas personalizadas</h3>
+    <div id="gc-lista"></div>
+    <div id="gc-msg" class="gc-msg"></div>
+    <button class="gc-btn-close" onclick="cerrarGestionar()">✕ Cerrar</button>
+  </div>
+</div>
+
+<!-- ── NUEVA CANCHA ── -->
+<div id="nc-overlay">
+  <div class="nc-box">
+    <h3>➕ Nueva Cancha</h3>
+    <div class="nc-field">
+      <label>Nombre de la cancha</label>
+      <input id="nc-nombre" type="text" placeholder="Club de Golf..." autocorrect="off" autocapitalize="words">
+    </div>
+    <div class="nc-field">
+      <label>Ubicación (opcional)</label>
+      <input id="nc-ubicacion" type="text" placeholder="Ciudad, provincia" autocorrect="off">
+    </div>
+    <div class="nc-holes-hdr">
+      <div class="nc-holes-hdr-col"><span>Hoyo</span><span>Par</span><span>Hcp</span></div>
+      <div class="nc-holes-hdr-col"><span>Hoyo</span><span>Par</span><span>Hcp</span></div>
+    </div>
+    <div class="nc-holes-grid" id="nc-holes-grid"></div>
+    <div id="nc-toast" class="nc-toast"></div>
+    <div class="nc-btn-row">
+      <button class="nc-btn-ok" onclick="guardarNuevaCancha()">✓ Guardar y jugar</button>
+      <button class="nc-btn-cancel" onclick="cerrarNuevaCancha()">✕ Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL INSTRUCCIONES ── -->
+<div id="modal-instrucciones" onclick="if(event.target===this)closeInstructions()">
+  <div class="modal-box">
+    <h2>🏆 SUSA Ryder CUP</h2>
+    <p>Cada línea de 4 jugadores disputa 3 formatos simultáneos:</p>
+    <div class="m-mod">⚔️ Match 1 — J1 🍷 vs J3 🌸</div>
+    <div class="m-mod-desc">Match play individual. Menor neto gana el hoyo = 1 pt. HCP 85%.</div>
+    <div class="m-mod">⚔️ Match 2 — J2 🍷 vs J4 🌸</div>
+    <div class="m-mod-desc">Match play individual. Menor neto gana el hoyo = 1 pt. HCP 85%.</div>
+    <div class="m-mod">⛳ Fourball — Tinto vs Rosé</div>
+    <div class="m-mod-desc">"1° y 2° mejores" o "A la mejor". El equipo Tinto (J1+J2) contra el equipo Rosé (J3+J4). HCP 85%.</div>
+    <p style="margin-top:12px;font-size:13px;color:#a8a8d8">EL NETO = suma de todos los puntos ganados por cada equipo en los 3 formatos del día.</p>
+    <p style="margin-top:8px;font-size:12px;color:#a8a8d8">El orden de ingreso define los matches: <br><b style="color:#ff9999">J1 vs J3</b> &nbsp;·&nbsp; <b style="color:#ffb0d0">J2 vs J4</b></p>
+    <button class="modal-close" onclick="closeInstructions()">Cerrar</button>
+  </div>
+</div>
+
+<!-- ── SCORECARD ── -->
+<div id="scorecard">
+  <p id="sc-title"></p>
+  <div class="sc-wrap">
+    <table class="sc" id="sc-tbl"></table>
+  </div>
+
+  <!-- FOURBALL: TINTO vs ROSÉ -->
+  <div id="team-section" style="display:none" class="sec-sep">
+    <p class="sec-title" style="color:#ffd700" id="team-section-title">⛳ FOURBALL · TINTO vs ROSÉ</p>
+    <p class="sec-sub" id="team-sub"></p>
+    <div class="sc-wrap">
+      <table class="sc" id="team-tbl"></table>
+    </div>
+    <p class="sec-legend" id="team-legend"></p>
+    <p class="sec-legend" style="margin-top:4px">· Los puntos se calculan hoyo por hoyo cuando los 4 jugadores tienen score ·</p>
+  </div>
+
+  <!-- MATCHES RYDER: J1:J3 · J2:J4 -->
+  <div id="section-ryder-match" style="display:none" class="sec-sep">
+    <p class="sec-title" style="color:#ffd700">⚔️ MATCHES · J1:J3 &nbsp;·&nbsp; J2:J4</p>
+    <p class="sec-sub" id="sub-ryder-match"></p>
+    <div class="sc-wrap">
+      <table class="sc" id="tbl-ryder-match"></table>
+    </div>
+    <p class="sec-legend" id="legend-ryder-match">Menor neto gana el hoyo = 1 pt &nbsp;·&nbsp; Empate = 0 pts &nbsp;|&nbsp; HCP 85%</p>
+  </div>
+
+  <!-- EL NETO -->
+  <div id="el-neto" class="sec-sep">
+    <div class="neto-label">resultado de la línea</div>
+    <div class="neto-title">⚡ EL NETO ⚡</div>
+    <div class="neto-team tinto">
+      <span class="team-name">🍷 TINTO</span>
+      <span class="team-pts" id="neto-tinto">—</span>
+    </div>
+    <div class="neto-team rose">
+      <span class="team-name">🌸 ROSÉ</span>
+      <span class="team-pts" id="neto-rose">—</span>
+    </div>
+    <div class="neto-winner" id="neto-winner" style="display:none"></div>
+    <p class="sec-legend" style="margin-top:10px">Match 1 (J1 vs J3) + Match 2 (J2 vs J4) + Fourball</p>
+  </div>
+
+  <div class="btn-new-row">
+    <button class="btn-share" onclick="shareCard()">📤 Compartir<br>Tarjeta</button>
+    <button class="btn-back"  onclick="goBack()">↩ Regresar</button>
+    <button class="btn-new"   onclick="newGame()">↩ Nueva<br>Partida</button>
+  </div>
+</div>
+
+<!-- ── MODAL MODO DE JUEGO ── -->
+<div id="modal-mode" style="display:none;position:fixed;inset:0;z-index:1001;background:rgba(0,0,0,0.88);justify-content:center;align-items:center;padding:20px;">
+  <div id="mode-step1" class="modal-box" style="text-align:center;">
+    <h2>⛳ Fourball · Modalidad</h2>
+    <p style="color:#a8a8d8;font-size:13px;margin-bottom:20px;">Tinto (J1+J2) vs Rosé (J3+J4) — ¿Cómo juegan?</p>
+    <button class="mode-btn" onclick="selectGameMode('1y2')">
+      1° y 2° Mejores<br>
+      <span style="font-size:11px;font-weight:normal;color:#a8a8d8">2 pts la 1ª mejor · 1 pt la 2ª mejor</span>
+    </button>
+    <button class="mode-btn" style="margin-top:12px;" onclick="selectGameMode('mejor')">
+      A la Mejor<br>
+      <span style="font-size:11px;font-weight:normal;color:#a8a8d8">Solo la mejor pelota del equipo</span>
+    </button>
+  </div>
+  <div id="mode-step2" class="modal-box" style="display:none;text-align:center;">
+    <h2>⚙️ Hándicap</h2>
+    <p style="color:#a8a8d8;font-size:13px;margin-bottom:20px;">¿Cómo se aplican los HCP?</p>
+    <button class="mode-btn" onclick="selectHcpMode('completo')">
+      HCP Completo<br>
+      <span style="font-size:11px;font-weight:normal;color:#a8a8d8">85% del HCP de c/u contra la cancha</span>
+    </button>
+    <button class="mode-btn" style="margin-top:12px;" onclick="selectHcpMode('cero')">
+      Bajar a Cero<br>
+      <span style="font-size:11px;font-weight:normal;color:#a8a8d8">85% de la diferencia con el menor HCP</span>
+    </button>
+  </div>
+</div>
+
+<script>
+const COURSES = {
+  "CNSI": [
+    [4, 3],[3,15],[4,17],[4, 9],[4, 5],[5, 1],[4, 7],[3,13],[4,11],
+    [4,14],[4, 6],[5,10],[4,12],[3, 2],[5, 8],[4, 4],[3,18],[4,16]
+  ],
+  "Pilara": [
+    [5, 3],[3,13],[4, 5],[4,11],[4,15],[4, 9],[5, 1],[3,17],[4, 7],
+    [4,12],[3,18],[4, 6],[3,14],[5, 2],[4,16],[4,10],[4, 8],[5, 4]
+  ],
+  "Estancias": [
+    [4,11],[4, 3],[4, 7],[4, 9],[3,17],[5,13],[3,15],[4, 5],[4, 1],
+    [4, 2],[4,10],[3,12],[4,16],[5,18],[3, 8],[5,14],[4, 4],[5, 6]
+  ],
+  "Piero (Azul-Blanca)": [
+    [4, 7],[5, 1],[4,13],[4,11],[4, 3],[3,15],[5, 9],[3,17],[4, 5],
+    [5, 8],[3,18],[4,10],[5,12],[4, 2],[4, 6],[4,14],[3,16],[4, 4]
+  ],
+  "Highland": [
+    [4,17],[3,13],[5,11],[4, 1],[5,15],[3, 9],[4, 7],[4, 3],[4, 5],
+    [5,16],[4, 8],[3,14],[4,12],[5,18],[3, 2],[4, 6],[4,10],[4, 4]
+  ],
+  "Lagartos (Agua-Larga)": [
+    [4, 9],[3,17],[3, 3],[4,13],[3,15],[4, 7],[5, 1],[4, 5],[5,11],
+    [3,16],[5,12],[4, 8],[4, 2],[5,10],[3,18],[5, 6],[4,14],[4, 4]
+  ],
+  "Campo Chico": [
+    [4, 1],[4,13],[5, 3],[3, 7],[5, 5],[4,17],[4,15],[3, 9],[4,11],
+    [4, 4],[3,10],[4, 8],[4,14],[4,18],[3,16],[5, 2],[5,12],[4, 6]
+  ],
+  "Hurlingham": [
+    [4, 5],[4, 7],[3,13],[4,11],[5, 1],[5, 9],[3,15],[4, 3],[3,17],
+    [4,14],[5, 4],[3,18],[5, 2],[4, 6],[3,10],[4, 8],[5,16],[4,12]
+  ],
+  "Jockey (Colorada)": [
+    [4, 5],[4,11],[3,17],[5, 9],[4,13],[4, 7],[4, 1],[3,15],[4, 3],
+    [5, 4],[5,12],[3,18],[4, 2],[4, 6],[5,10],[4, 8],[3,16],[4,14]
+  ],
+  "CUBA Fatima": [
+    [5, 5],[3,15],[4, 1],[5,11],[4, 9],[4, 7],[3,17],[4, 3],[4,13],
+    [4,12],[5, 6],[4, 4],[4, 8],[3,16],[4, 2],[4,10],[3,18],[5,14]
+  ],
+  "Pinguinos": [
+    [4, 7],[5, 3],[3,17],[4,11],[4, 5],[3,15],[4, 9],[5, 1],[4,13],
+    [4,10],[5, 4],[3,18],[4,14],[3,16],[4, 8],[5, 2],[3,12],[5, 6]
+  ],
+  "Golfers Country Club": [
+    [4, 5],[4, 3],[4,13],[5,17],[3,15],[4, 7],[3, 9],[4,11],[5, 1],
+    [4, 6],[4, 4],[5,16],[3,10],[4, 2],[4,12],[4, 8],[3,14],[5,18]
+  ],
+  "Cumelen": [
+    [4, 5],[3, 9],[4, 7],[3,17],[4, 3],[5, 1],[4,15],[4,11],[3,13],
+    [4, 6],[3,10],[4, 8],[3,18],[4, 4],[5, 2],[4,16],[4,12],[3,14]
+  ],
+  "Potrerillo de Larreta": [
+    [4,11],[5,13],[3,17],[5, 1],[3, 7],[4, 3],[3,15],[5, 5],[4, 9],
+    [4, 2],[4, 6],[4,18],[5,14],[3,16],[4, 4],[3,12],[5, 8],[4,10]
+  ],
+};
+
+// ── FUNCIONES DE SCORE ────────────────────────────────────────────────────────
+function strokes(hcp, hcpH) {
+  return Math.floor(hcp/18) + (hcp%18 >= hcpH ? 1 : 0);
+}
+function puntos(g, par, hcp, hcpH) {
+  return Math.max(0, par + strokes(hcp,hcpH) + 2 - g);
+}
+function aag(g, par, hcp, hcpH) {
+  return Math.min(g, par + strokes(hcp,hcpH) + 2);
+}
+function hcp85(hcp) { return Math.round(hcp * 0.85); }
+function effectiveTeamHcp(hcp) {
+  if (hcpMode === 'cero') {
+    const minHcp = Math.min(...players.map(p => p.hcp));
+    return Math.round((hcp - minHcp) * 0.85);
+  }
+  return hcp85(hcp);
+}
+function strokesForTeam(hcp, hcpH) {
+  const h = effectiveTeamHcp(hcp);
+  return Math.floor(h/18) + (h%18 >= hcpH ? 1 : 0);
+}
+
+// ── ESTADO ────────────────────────────────────────────────────────────────────
+let players  = [];
+let course   = [];
+let gameMode = '1y2';
+let hcpMode  = 'completo';
+let _tmpCourseName = '';
+const STATE_KEY = 'ryder_suasa_v1';
+
+let _pendingScores = null;
+let _savedGameMode = null;
+let _savedHcpMode  = null;
+
+// ── PERSISTENCIA ──────────────────────────────────────────────────────────────
+function saveState() {
+  if (document.getElementById('scorecard').style.display === 'none') return;
+  const scores = {};
+  players.forEach((p, j) => {
+    for (let h = 0; h < 18; h++) {
+      const el = document.getElementById(`g${j}_${h}`);
+      if (el && el.value.trim() !== '') scores[`${j}_${h}`] = el.value.trim();
+    }
+  });
+  try { localStorage.setItem(STATE_KEY, JSON.stringify({
+    courseName: document.getElementById('sc-title').textContent,
+    players, course, scores, gameMode, hcpMode
+  })); } catch(e) {}
+}
+
+function restoreState() {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(STATE_KEY)); } catch(e) { return false; }
+  if (!saved || !saved.players || !saved.course || saved.players.length !== 4) return false;
+  players  = saved.players;
+  gameMode = saved.gameMode || '1y2';
+  hcpMode  = saved.hcpMode  || 'completo';
+  const courseKey = (saved.courseName || '').replace(/\s*[-—–].*$/, '').trim();
+  if (courseKey && COURSES[courseKey]) {
+    const base = COURSES[courseKey];
+    const savedHcps = JSON.parse(localStorage.getItem('hcp_' + courseKey) || 'null');
+    course = base.map(([par], h) => [par, (savedHcps && savedHcps[h] != null) ? savedHcps[h] : base[h][1]]);
+  } else {
+    course = saved.course;
+  }
+  document.getElementById('sc-title').textContent = saved.courseName || '';
+  buildScorecard();
+  buildTeamSection();
+  buildRyderMatchSection();
+  Object.entries(saved.scores || {}).forEach(([key, val]) => {
+    const el = document.getElementById(`g${key}`);
+    if (el) el.value = val;
+  });
+  recalcAll();
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('scorecard').style.display = 'block';
+  return true;
+}
+
+function resetCourse() {
+  const name = document.getElementById('csel').value;
+  localStorage.removeItem('hcp_' + name);
+  populateHcpTable();
+  const toast = document.getElementById('save-toast');
+  toast.textContent = 'Restablecido';
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; toast.textContent = '✅ Guardado'; }, 2000);
+}
+
+function saveCourse() {
+  const name = document.getElementById('csel').value;
+  const hcps = [];
+  for (let h = 0; h < 18; h++) {
+    const el = document.getElementById(`hv${h}`);
+    const val = el ? parseInt(el.value) : COURSES[name][h][1];
+    hcps.push((!isNaN(val) && val >= 1 && val <= 18) ? val : COURSES[name][h][1]);
+  }
+  localStorage.setItem('hcp_' + name, JSON.stringify(hcps));
+  const toast = document.getElementById('save-toast');
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 2000);
+}
+
+function populateHcpTable() {
+  const name = document.getElementById('csel').value;
+  const data = COURSES[name];
+  const saved = JSON.parse(localStorage.getItem('hcp_' + name) || 'null');
+  const hcpVal = h => (saved && saved[h] != null) ? saved[h] : data[h][1];
+  const tbody = document.getElementById('hcp-rows');
+  tbody.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    const h1 = i, h2 = i + 9;
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="hnum">${h1+1}</td>` +
+      `<td><input class="hv" type="number" id="hv${h1}" value="${hcpVal(h1)}" min="1" max="18" inputmode="numeric"></td>` +
+      `<td class="sep"></td>` +
+      `<td class="hnum">${h2+1}</td>` +
+      `<td><input class="hv" type="number" id="hv${h2}" value="${hcpVal(h2)}" min="1" max="18" inputmode="numeric"></td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(function() {
+  const customSaved = JSON.parse(localStorage.getItem('custom_courses_ryder') || '[]');
+  customSaved.forEach(c => { if (!COURSES[c.name]) COURSES[c.name] = c.data; });
+
+  const sel = document.getElementById('csel');
+  // Default: Golfers first
+  const courseNames = Object.keys(COURSES);
+  const golfersIdx = courseNames.indexOf('Golfers Country Club');
+  if (golfersIdx > 0) {
+    courseNames.splice(golfersIdx, 1);
+    courseNames.unshift('Golfers Country Club');
+  }
+  courseNames.forEach(name => {
+    const o = document.createElement('option');
+    o.value = o.textContent = name;
+    sel.appendChild(o);
+  });
+  const oNew = document.createElement('option');
+  oNew.value = '__nueva__'; oNew.textContent = '➕ Cancha nueva…';
+  sel.appendChild(oNew);
+  const oGest = document.createElement('option');
+  oGest.value = '__gestionar__'; oGest.textContent = '🗑 Gestionar canchas…';
+  sel.appendChild(oGest);
+
+  populateHcpTable();
+  restoreState();
+})();
+
+// ── INICIO ────────────────────────────────────────────────────────────────────
+function startGame() {
+  players = [];
+  const labels = ['J1 (Tinto)', 'J2 (Tinto)', 'J3 (Rosé)', 'J4 (Rosé)'];
+  for (let i = 0; i < 4; i++) {
+    const ini = document.getElementById(`ini${i}`).value.trim().toUpperCase();
+    if (!ini) { alert(`Ingresá las iniciales de ${labels[i]}.`); return; }
+    const hcpRaw = document.getElementById(`hcp${i}`).value.trim();
+    const hcp = hcpRaw === '' ? 0 : parseInt(hcpRaw);
+    if (isNaN(hcp)||hcp<0||hcp>54) { alert(`HCP inválido para ${labels[i]}.`); return; }
+    players.push({ ini, hcp });
+  }
+  const name = document.getElementById('csel').value;
+  const base = COURSES[name];
+  course = base.map(([par], h) => {
+    const hv = parseInt(document.getElementById(`hv${h}`).value);
+    return [par, isNaN(hv)||hv<1||hv>18 ? base[h][1] : hv];
+  });
+  _tmpCourseName = name;
+  if (_pendingScores !== null) {
+    gameMode = _savedGameMode || '1y2';
+    hcpMode  = _savedHcpMode  || 'completo';
+    finishStartGame();
+  } else {
+    gameMode = '1y2';
+    hcpMode  = 'completo';
+    showModeModal(1);
+  }
+}
+
+function showModeModal(step) {
+  const m = document.getElementById('modal-mode');
+  m.style.display = 'flex';
+  document.getElementById('mode-step1').style.display = step === 1 ? 'block' : 'none';
+  document.getElementById('mode-step2').style.display = step === 2 ? 'block' : 'none';
+}
+
+function selectGameMode(mode) {
+  gameMode = mode;
+  showModeModal(2);
+}
+
+function selectHcpMode(mode) {
+  hcpMode = mode;
+  document.getElementById('modal-mode').style.display = 'none';
+  finishStartGame();
+}
+
+function finishStartGame() {
+  document.getElementById('sc-title').textContent = _tmpCourseName + ' — Ryder CUP';
+  buildScorecard();
+  buildTeamSection();
+  buildRyderMatchSection();
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('scorecard').style.display = 'block';
+  if (_pendingScores !== null) {
+    Object.entries(_pendingScores).forEach(([key, val]) => {
+      const el = document.getElementById(`g${key}`);
+      if (el) el.value = val;
+    });
+    _pendingScores = null;
+    recalcAll();
+  }
+  saveState();
+}
+
+// ── SCORECARD ─────────────────────────────────────────────────────────────────
+function strokeBg(stk) {
+  if (stk >= 2) return ['#4a3080','#fff'];
+  if (stk === 1) return ['#2a2060','#d8d8ff'];
+  return ['#1c1c3a','#d8d8ff'];
+}
+
+function scoreColor(pts, isPickup, netOverPar) {
+  if (isPickup)        return ['#CC4400','#fff'];
+  if (pts >= 4)        return ['#1565C0','#fff'];
+  if (pts === 3)       return ['#5BC8F5','#1a1a3a'];
+  if (pts === 2)       return ['#4CAF50','#fff'];
+  if (pts === 1)       return ['#c8960c','#1a1a3a'];
+  if (netOverPar === 2) return ['#FFA040','#1a1a3a'];
+  return ['#CC4400','#fff'];
+}
+
+function buildScorecard() {
+  const tbl = document.getElementById('sc-tbl');
+  tbl.innerHTML = '';
+  const thead = document.createElement('thead');
+  // Column order in scorecard: J1(T), J2(T), J3(R), J4(R)
+  const playerColors = ['h-tinto','h-tinto','h-rose','h-rose'];
+  let th = '<tr><th class="c-fix">H</th><th class="c-fix">Par</th><th class="c-fix">HCP</th>';
+  players.forEach((p, j) => {
+    th += `<th class="c-player ${playerColors[j]}">${p.ini}<br><span style="color:#ffd700;font-size:10px">HCP ${p.hcp}</span></th>`;
+  });
+  th += '</tr>';
+  thead.innerHTML = th; tbl.appendChild(thead);
+  const tbody = document.createElement('tbody'); tbl.appendChild(tbody);
+
+  function addHole(h) {
+    const [par, hcpH] = course[h];
+    const tr = document.createElement('tr');
+    tr.className = h%2===0 ? 'r-even' : 'r-odd';
+    let html = `<td class="c-fix">${h+1}</td><td class="c-fix">${par}</td><td class="c-fix">${hcpH}</td>`;
+    players.forEach((_,j) => {
+      html += `<td class="c-player"><input class="g" type="text" id="g${j}_${h}" inputmode="numeric" pattern="[0-9xX]*" autocomplete="off"></td>`;
+    });
+    tr.innerHTML = html; tbody.appendChild(tr);
+    players.forEach((p,j) => {
+      const el = document.getElementById(`g${j}_${h}`);
+      const stk = strokesForTeam(p.hcp, hcpH);
+      const [ibg,ifg] = strokeBg(stk);
+      el.style.background = ibg; el.style.color = ifg;
+      el.addEventListener('input', function() {
+        if (this.value === '0') this.value = 'X';
+        else if (this.value.toLowerCase() === 'x') this.value = 'X';
+        recalcAll();
+      });
+    });
+  }
+
+  function addSubRow(label, css, parSum, mkId) {
+    const tr = document.createElement('tr'); tr.className = css;
+    let html = `<td class="lbl c-fix" style="max-width:none;width:auto" colspan="2">${label}</td><td class="c-fix">${parSum}</td>`;
+    players.forEach((_,j) => html += `<td class="c-player" id="${mkId(j)}">—</td>`);
+    tr.innerHTML = html; tbody.appendChild(tr);
+  }
+  function addResultRow(label, css, mkId) {
+    const tr = document.createElement('tr'); tr.className = css;
+    let html = `<td class="lbl" colspan="3">${label}</td>`;
+    players.forEach((_,j) => html += `<td id="${mkId(j)}">—</td>`);
+    tr.innerHTML = html; tbody.appendChild(tr);
+  }
+
+  for (let h=0; h<9; h++) addHole(h);
+  addSubRow('Ida',    'r-sub', course.slice(0,9).reduce((s,[p])=>s+p,0), j=>`f9_${j}`);
+  for (let h=9; h<18; h++) addHole(h);
+  addSubRow('Vuelta', 'r-sub', course.slice(9).reduce((s,[p])=>s+p,0),  j=>`b9_${j}`);
+  addSubRow('TOTAL',  'r-total', course.reduce((s,[p])=>s+p,0),          j=>`tot_${j}`);
+  addResultRow('STABLEFORD','r-stbl', j=>`stbl_${j}`);
+  addResultRow('AAG',       'r-aag',  j=>`aag_${j}`);
+  setupStickyHeader();
+}
+
+// ── FOURBALL: TINTO vs ROSÉ ───────────────────────────────────────────────────
+function buildTeamSection() {
+  document.getElementById('team-section').style.display = 'block';
+  const effHcps = players.map(p => effectiveTeamHcp(p.hcp));
+  const elTitle = document.getElementById('team-section-title');
+  if (elTitle) elTitle.textContent = gameMode === '1y2' ? '⛳ FOURBALL · 1ª Y 2ª MEJORES' : '⛳ FOURBALL · A LA MEJOR';
+  const hcpLabel = hcpMode === 'cero' ? 'Baja a cero · 85% dif.' : 'HCP 85%';
+  const elLegend = document.getElementById('team-legend');
+  if (elLegend) {
+    elLegend.textContent = gameMode === '1y2'
+      ? `1º neto único = 2 pts · 2º neto único = 1 pt · Empate = 0 pts | ${hcpLabel}`
+      : `Mejor pelota gana = 1 pt · Empate = 0 pts | ${hcpLabel}`;
+  }
+  document.getElementById('team-sub').textContent =
+    `🍷 Tinto: ${players[0].ini}(${effHcps[0]}) / ${players[1].ini}(${effHcps[1]})` +
+    `   ·   🌸 Rosé: ${players[2].ini}(${effHcps[2]}) / ${players[3].ini}(${effHcps[3]})`;
+
+  const tbl = document.getElementById('team-tbl');
+  tbl.innerHTML = '';
+  const thead = document.createElement('thead');
+  thead.innerHTML =
+    `<tr>
+      <th class="c-fix">H</th><th class="c-fix">Par</th><th class="c-fix">HCP</th>
+      <th class="c-team h-tinto">🍷 Tinto<br>
+        <span style="color:#ffb0b0;font-size:10px">${players[0].ini}(${effHcps[0]}) / ${players[1].ini}(${effHcps[1]})</span></th>
+      <th class="c-team h-rose">🌸 Rosé<br>
+        <span style="color:#ffb0d0;font-size:10px">${players[2].ini}(${effHcps[2]}) / ${players[3].ini}(${effHcps[3]})</span></th>
+    </tr>`;
+  tbl.appendChild(thead);
+  const tbody = document.createElement('tbody'); tbl.appendChild(tbody);
+
+  function addHoleRow(h) {
+    const [par,hcpH] = course[h];
+    const tr = document.createElement('tr');
+    tr.className = h%2===0 ? 'r-even':'r-odd';
+    tr.innerHTML =
+      `<td class="c-fix">${h+1}</td><td class="c-fix">${par}</td><td class="c-fix">${hcpH}</td>` +
+      `<td class="c-team" id="ta_${h}">·</td><td class="c-team" id="tb_${h}">·</td>`;
+    tbody.appendChild(tr);
+  }
+  function addTeamRow(label, idA, idB, css) {
+    const tr = document.createElement('tr'); tr.className = css;
+    tr.innerHTML = `<td class="lbl" colspan="3">${label}</td>` +
+      `<td class="c-team" id="${idA}">—</td><td class="c-team" id="${idB}">—</td>`;
+    tbody.appendChild(tr);
+  }
+  for (let h=0; h<9; h++) addHoleRow(h);
+  addTeamRow('Ida',    'ta_f9','tb_f9','r-sub');
+  for (let h=9; h<18; h++) addHoleRow(h);
+  addTeamRow('Vuelta', 'ta_b9','tb_b9','r-sub');
+  addTeamRow('TOTAL',  'ta_tot','tb_tot','r-total');
+  addTeamRow('DIFERENCIA','ta_dif','tb_dif','r-diff');
+}
+
+function calcHoleTeam(h) {
+  const [,hcpH] = course[h];
+  const nets = [];
+  for (let j = 0; j < 4; j++) {
+    const el = document.getElementById(`g${j}_${h}`);
+    if (!el || el.value.trim() === '') return null;
+    const raw = el.value.trim();
+    const isPickup = (raw === 'X');
+    const g = parseInt(raw);
+    if (!isPickup && (isNaN(g) || g <= 0)) return null;
+    nets[j] = isPickup ? Infinity : g - strokesForTeam(players[j].hcp, hcpH);
+  }
+  const [a1,a2] = nets[0]<=nets[1] ? [nets[0],nets[1]] : [nets[1],nets[0]];
+  const [b1,b2] = nets[2]<=nets[3] ? [nets[2],nets[3]] : [nets[3],nets[2]];
+  const pts = [0,0];
+  if (gameMode === '1y2') {
+    if (a1<b1) pts[0]+=2; else if (b1<a1) pts[1]+=2;
+    if (a2<b2) pts[0]+=1; else if (b2<a2) pts[1]+=1;
+  } else {
+    if (a1<b1) pts[0]+=1; else if (b1<a1) pts[1]+=1;
+  }
+  return pts;
+}
+
+function applyTeam(td, p) {
+  td.textContent = p===0 ? '0' : p;
+  if (p===3) td.className+=' tc-3';
+  else if (p===2) td.className+=' tc-2';
+  else if (p===1) td.className+=' tc-1';
+  else td.className+=' tc-0';
+}
+
+function recalcTeam() {
+  let f9A=0,f9B=0,b9A=0,b9B=0,f9ok=false,b9ok=false;
+  for (let h=0; h<18; h++) {
+    const pts = calcHoleTeam(h);
+    const tdA=document.getElementById(`ta_${h}`), tdB=document.getElementById(`tb_${h}`);
+    if (!tdA||!tdB) continue;
+    tdA.className='c-team'; tdB.className='c-team';
+    if (!pts) { tdA.textContent='·'; tdB.textContent='·'; continue; }
+    applyTeam(tdA,pts[0]); applyTeam(tdB,pts[1]);
+    if (h<9) { f9A+=pts[0]; f9B+=pts[1]; f9ok=true; }
+    else     { b9A+=pts[0]; b9B+=pts[1]; b9ok=true; }
+  }
+  const setTd=(id,val)=>{const el=document.getElementById(id);if(el){el.textContent=val;el.className='c-team';}};
+  setTd('ta_f9',f9ok?f9A:'—'); setTd('tb_f9',f9ok?f9B:'—');
+  setTd('ta_b9',b9ok?b9A:'—'); setTd('tb_b9',b9ok?b9B:'—');
+  const any=f9ok||b9ok, totA=f9A+b9A, totB=f9B+b9B;
+  setTd('ta_tot',any?totA:'—'); setTd('tb_tot',any?totB:'—');
+  const dA=document.getElementById('ta_dif'), dB=document.getElementById('tb_dif');
+  if (!dA||!dB) return;
+  dA.className='c-team'; dB.className='c-team';
+  if (!any) { dA.textContent='—'; dB.textContent='—'; }
+  else if (totA===totB) { dA.textContent='EMPATE'; dB.textContent='EMPATE'; }
+  else if (totA>totB) {
+    dA.textContent=`+${totA-totB}`; dA.className+=' tc-2'; dB.textContent='—';
+  } else {
+    dA.textContent='—'; dB.textContent=`+${totB-totA}`; dB.className+=' tc-2';
+  }
+  // Convert fourball hole-point totals → match-level points (2/1/0)
+  let tintoTotal = 0, roseTotal = 0;
+  if (any) {
+    if (totA > totB)      { tintoTotal = 2; roseTotal = 0; }
+    else if (totB > totA) { tintoTotal = 0; roseTotal = 2; }
+    else                  { tintoTotal = 1; roseTotal = 1; }
+  }
+  return { tintoTotal, roseTotal, hasData: any };
+}
+
+// ── MATCHES RYDER: J1vsJ3 y J2vsJ4 (columnas: 0,2,1,3) ──────────────────────
+// Pairs: pair1 = players[0] vs players[2], pair2 = players[1] vs players[3]
+// Display column order: [0, 2, 1, 3]
+const RYDER_ORDER = [0, 2, 1, 3]; // display order
+const PAIRS = [[0, 2], [1, 3]];   // match pairs
+
+function buildRyderMatchSection() {
+  document.getElementById('section-ryder-match').style.display = 'block';
+  const effHcps = players.map(p => effectiveTeamHcp(p.hcp));
+  const hcpLabel = hcpMode === 'cero' ? 'Baja a cero · 85% dif.' : 'HCP 85%';
+  document.getElementById('legend-ryder-match').textContent =
+    `Menor neto gana el hoyo = 1 pt · Empate = 0 pts | ${hcpLabel}`;
+  document.getElementById('sub-ryder-match').textContent =
+    `⚔️ ${players[0].ini}🍷(${effHcps[0]}) vs ${players[2].ini}🌸(${effHcps[2]})` +
+    `   ·   ` +
+    `⚔️ ${players[1].ini}🍷(${effHcps[1]}) vs ${players[3].ini}🌸(${effHcps[3]})`;
+
+  const tbl = document.getElementById('tbl-ryder-match');
+  tbl.innerHTML = '';
+  const thead = document.createElement('thead');
+  // Column headers in order: J1(Tinto), J3(Rosé), J2(Tinto), J4(Rosé)
+  const colColors = ['h-tinto','h-rose','h-tinto','h-rose'];
+  let th = '<tr><th class="c-fix">H</th><th class="c-fix">Par</th><th class="c-fix">HCP</th>';
+  RYDER_ORDER.forEach((j, ci) => {
+    const label = j===0?'J1':j===1?'J2':j===2?'J3':'J4';
+    const emoji = (j===0||j===1) ? '🍷' : '🌸';
+    th += `<th class="c-match ${colColors[ci]}">${emoji}${players[j].ini}<br><span style="color:#ffd700;font-size:10px">HCP ${effHcps[j]}</span></th>`;
+  });
+  th += '</tr>';
+  thead.innerHTML = th; tbl.appendChild(thead);
+  const tbody = document.createElement('tbody'); tbl.appendChild(tbody);
+
+  function addHoleMatch(h) {
+    const [par,hcpH] = course[h];
+    const tr = document.createElement('tr');
+    tr.className = h%2===0 ? 'r-even':'r-odd';
+    let html = `<td class="c-fix">${h+1}</td><td class="c-fix">${par}</td><td class="c-fix">${hcpH}</td>`;
+    RYDER_ORDER.forEach(j => html += `<td class="c-match" id="rm_${j}_${h}">·</td>`);
+    tr.innerHTML = html; tbody.appendChild(tr);
+  }
+  function addRowMatch(label, mkId, css) {
+    const tr = document.createElement('tr'); tr.className = css;
+    let html = `<td class="lbl" colspan="3">${label}</td>`;
+    RYDER_ORDER.forEach(j => html += `<td class="c-match" id="${mkId(j)}">—</td>`);
+    tr.innerHTML = html; tbody.appendChild(tr);
+  }
+  for (let h=0; h<9; h++) addHoleMatch(h);
+  addRowMatch('Ida',        j=>`rmf9_${j}`,  'r-sub');
+  for (let h=9; h<18; h++) addHoleMatch(h);
+  addRowMatch('Vuelta',     j=>`rmb9_${j}`,  'r-sub');
+  addRowMatch('TOTAL',      j=>`rmtot_${j}`, 'r-total');
+
+  // Separator row for Match 1 vs Match 2
+  const trDivider = document.createElement('tr'); trDivider.className='r-sub';
+  trDivider.innerHTML =
+    `<td class="lbl" colspan="3" style="text-align:center;font-size:11px;color:#a8a8c8">⚔️ MATCH 1 &nbsp;|&nbsp; ⚔️ MATCH 2</td>` +
+    `<td class="c-match" id="rmdif_0">—</td>` +
+    `<td class="c-match" id="rmdif_2">—</td>` +
+    `<td class="c-match" id="rmdif_1">—</td>` +
+    `<td class="c-match" id="rmdif_3">—</td>`;
+  tbody.appendChild(trDivider);
+}
+
+function calcHoleRyderMatch(h) {
+  const [,hcpH] = course[h];
+  // Returns: { pair1: [pts_j0, pts_j2], pair2: [pts_j1, pts_j3] }
+  const result = { pair1: null, pair2: null };
+  PAIRS.forEach(([jA, jB], pIdx) => {
+    const elA = document.getElementById(`g${jA}_${h}`);
+    const elB = document.getElementById(`g${jB}_${h}`);
+    if (!elA||!elB||elA.value.trim()===''||elB.value.trim()==='') return;
+    const rawA=elA.value.trim(), rawB=elB.value.trim();
+    const isPuA=(rawA==='X'), isPuB=(rawB==='X');
+    const gA=parseInt(rawA), gB=parseInt(rawB);
+    if (!isPuA&&(isNaN(gA)||gA<=0)) return;
+    if (!isPuB&&(isNaN(gB)||gB<=0)) return;
+    const netA = isPuA ? Infinity : gA - strokesForTeam(players[jA].hcp, hcpH);
+    const netB = isPuB ? Infinity : gB - strokesForTeam(players[jB].hcp, hcpH);
+    let pts;
+    if (netA < netB)      pts = [1, 0];
+    else if (netB < netA) pts = [0, 1];
+    else                  pts = [0, 0];
+    if (pIdx === 0) result.pair1 = pts; // [pts_j0, pts_j2]
+    else            result.pair2 = pts; // [pts_j1, pts_j3]
+  });
+  return result;
+}
+
+function recalcRyderMatches() {
+  // Totals per player in display order [0,2,1,3]
+  const f9 = {0:0, 1:0, 2:0, 3:0};
+  const b9 = {0:0, 1:0, 2:0, 3:0};
+  let f9ok=false, b9ok=false;
+
+  for (let h=0; h<18; h++) {
+    const res = calcHoleRyderMatch(h);
+    // Pair 1: j0 vs j2
+    const setCell = (j, pts, isWin) => {
+      const td = document.getElementById(`rm_${j}_${h}`);
+      if (!td) return;
+      td.className='c-match';
+      if (pts===1)        { td.textContent='1'; td.className+=' mc-win'; }
+      else if (isWin===0) { td.textContent='='; td.className+=' mc-tie'; }
+      else                { td.textContent='—'; td.className+=' mc-lose'; }
+    };
+    if (res.pair1) {
+      const [p0, p2] = res.pair1;
+      setCell(0, p0, p0===p2?0:null);
+      setCell(2, p2, p0===p2?0:null);
+      if (h<9) { f9[0]+=p0; f9[2]+=p2; f9ok=true; }
+      else     { b9[0]+=p0; b9[2]+=p2; b9ok=true; }
+    } else {
+      [0,2].forEach(j=>{ const td=document.getElementById(`rm_${j}_${h}`); if(td){td.className='c-match';td.textContent='·';} });
+    }
+    if (res.pair2) {
+      const [p1, p3] = res.pair2;
+      setCell(1, p1, p1===p3?0:null);
+      setCell(3, p3, p1===p3?0:null);
+      if (h<9) { f9[1]+=p1; f9[3]+=p3; f9ok=true; }
+      else     { b9[1]+=p1; b9[3]+=p3; b9ok=true; }
+    } else {
+      [1,3].forEach(j=>{ const td=document.getElementById(`rm_${j}_${h}`); if(td){td.className='c-match';td.textContent='·';} });
+    }
+  }
+
+  const tot = {};
+  RYDER_ORDER.forEach(j => tot[j] = f9[j] + b9[j]);
+
+  const setM = (id,val) => { const el=document.getElementById(id); if(el){el.textContent=val;el.className='c-match';} };
+  RYDER_ORDER.forEach(j => {
+    setM(`rmf9_${j}`,  f9ok ? (f9[j]||'0') : '—');
+    setM(`rmb9_${j}`,  b9ok ? (b9[j]||'0') : '—');
+    setM(`rmtot_${j}`, (f9ok||b9ok) ? (tot[j]||'0') : '—');
+  });
+
+  // Diferencia per pair
+  const showDif = f9ok || b9ok;
+  const applyDif = (jA, jB) => {
+    const elA=document.getElementById(`rmdif_${jA}`), elB=document.getElementById(`rmdif_${jB}`);
+    if (!elA||!elB) return;
+    elA.className='c-match'; elB.className='c-match';
+    if (!showDif) { elA.textContent='—'; elB.textContent='—'; return; }
+    const tA=tot[jA], tB=tot[jB];
+    if (tA===tB) { elA.textContent='='; elB.textContent='='; }
+    else if (tA>tB) { elA.textContent=`+${tA-tB}`; elA.className+=' mc-win'; elB.textContent='—'; }
+    else            { elA.textContent='—'; elB.textContent=`+${tB-tA}`; elB.className+=' mc-win'; }
+  };
+  applyDif(0, 2); // Match 1
+  applyDif(1, 3); // Match 2
+
+  // Convert holes-won totals → match-level points (1/0.5/0 per individual match)
+  let tintoMatch = 0, roseMatch = 0;
+  if (showDif) {
+    // Match 1: J0 (Tinto) vs J2 (Rosé)
+    if      (tot[0] > tot[2]) { tintoMatch += 1; }
+    else if (tot[2] > tot[0]) { roseMatch  += 1; }
+    else                      { tintoMatch += 0.5; roseMatch += 0.5; }
+    // Match 2: J1 (Tinto) vs J3 (Rosé)
+    if      (tot[1] > tot[3]) { tintoMatch += 1; }
+    else if (tot[3] > tot[1]) { roseMatch  += 1; }
+    else                      { tintoMatch += 0.5; roseMatch += 0.5; }
+  }
+  return { tintoMatch, roseMatch, hasData: showDif };
+}
+
+// ── EL NETO ───────────────────────────────────────────────────────────────────
+function updateNeto(matchResult, teamResult) {
+  const elTinto  = document.getElementById('neto-tinto');
+  const elRose   = document.getElementById('neto-rose');
+  const elWinner = document.getElementById('neto-winner');
+  if (!elTinto||!elRose) return;
+
+  const hasAny = (matchResult && matchResult.hasData) || (teamResult && teamResult.hasData);
+  if (!hasAny) {
+    elTinto.textContent = '—'; elRose.textContent = '—';
+    elWinner.style.display='none'; return;
+  }
+  const tinto = (matchResult ? matchResult.tintoMatch : 0) + (teamResult ? teamResult.tintoTotal : 0);
+  const rose  = (matchResult ? matchResult.roseMatch  : 0) + (teamResult ? teamResult.roseTotal  : 0);
+  // Format: integers as "3", halves as "½", "1½", "2½"
+  const fmtPts = v => {
+    if (Number.isInteger(v)) return String(v);
+    const int = Math.floor(v);
+    return int > 0 ? `${int}½` : '½';
+  };
+  const fmtDif = v => {
+    if (v === 0) return '0';
+    if (Number.isInteger(v)) return `+${v}`;
+    const int = Math.floor(v);
+    return int > 0 ? `+${int}½` : '+½';
+  };
+  elTinto.textContent = `${fmtPts(tinto)} pts`;
+  elRose.textContent  = `${fmtPts(rose)} pts`;
+  elWinner.style.display = 'block';
+  if (tinto > rose)      elWinner.textContent = `🏆 ¡GANA TINTO! ${fmtDif(tinto-rose)}`;
+  else if (rose > tinto) elWinner.textContent = `🏆 ¡GANA ROSÉ! ${fmtDif(rose-tinto)}`;
+  else                   elWinner.textContent = `🤝 EMPATE`;
+}
+
+// ── RECALC GENERAL ───────────────────────────────────────────────────────────
+function set(id, val) {
+  const el = document.getElementById(id); if (el) el.textContent = val;
+}
+
+function recalcAll() {
+  players.forEach((p, j) => {
+    let f9g=0, b9g=0, totPts=0, totAAG=0;
+    let f9ok=false, b9ok=false, f9pickup=false, b9pickup=false;
+    for (let h=0; h<18; h++) {
+      const el = document.getElementById(`g${j}_${h}`);
+      const raw = el ? el.value.trim() : '';
+      const isPickup = (raw === 'X');
+      const g = parseInt(raw);
+      if (!isPickup && (raw===''||isNaN(g)||g<=0)) {
+        if(el){ const [ibg,ifg]=strokeBg(strokesForTeam(p.hcp,course[h][1])); el.style.background=ibg; el.style.color=ifg; }
+        continue;
+      }
+      const [par,hcpH] = course[h];
+      const stk = strokes(p.hcp, hcpH);
+      const np2 = par + stk + 2;
+      let pts, holeAAG;
+      if (isPickup) {
+        pts = 0; holeAAG = np2;
+        if (el) { el.style.background='#CC4400'; el.style.color='#fff'; }
+        if (h<9) { f9pickup=true; f9ok=true; } else { b9pickup=true; b9ok=true; }
+      } else {
+        pts = puntos(g, par, p.hcp, hcpH);
+        holeAAG = aag(g, par, p.hcp, hcpH);
+        const [bg,fg] = scoreColor(pts, false, g - par - stk);
+        if (el) { el.style.background=bg; el.style.color=fg; }
+        if (h<9) { f9g+=g; f9ok=true; } else { b9g+=g; b9ok=true; }
+      }
+      totPts += pts; totAAG += holeAAG;
+    }
+    const any = f9ok||b9ok;
+    set(`f9_${j}`,   !f9ok ? '—' : f9pickup ? 'X' : f9g);
+    set(`b9_${j}`,   !b9ok ? '—' : b9pickup ? 'X' : b9g);
+    set(`tot_${j}`,  !any  ? '—' : (f9pickup||b9pickup) ? 'X' : f9g+b9g);
+    set(`stbl_${j}`, any   ? totPts : '—');
+    set(`aag_${j}`,  any   ? totAAG : '—');
+  });
+
+  const teamResult  = recalcTeam();
+  const matchResult = recalcRyderMatches();
+  updateNeto(matchResult, teamResult);
+  saveState();
+}
+
+// ── STICKY HEADER ─────────────────────────────────────────────────────────────
+function setupStickyHeader() {
+  const old = document.getElementById('sticky-sc-header');
+  if (old) old.remove();
+  const tbl  = document.getElementById('sc-tbl');
+  if (!tbl) return;
+  const thead = tbl.querySelector('thead');
+  const wrap  = tbl.closest('.sc-wrap');
+  if (!thead || !wrap) return;
+  const fixed = document.createElement('div');
+  fixed.id = 'sticky-sc-header';
+  const inner = document.createElement('div');
+  inner.className = 'sh-inner';
+  const cloneTbl = document.createElement('table');
+  cloneTbl.className = 'sc';
+  cloneTbl.appendChild(thead.cloneNode(true));
+  inner.appendChild(cloneTbl);
+  fixed.appendChild(inner);
+  document.body.appendChild(fixed);
+  let raf = null;
+  function syncWidths() {
+    const wrapRect = wrap.getBoundingClientRect();
+    fixed.style.left  = wrapRect.left + 'px';
+    fixed.style.width = wrapRect.width + 'px';
+    inner.style.width = wrapRect.width + 'px';
+    const realThs  = thead.querySelectorAll('th');
+    const cloneThs = cloneTbl.querySelectorAll('th');
+    let totalW = 0;
+    realThs.forEach((th, i) => {
+      const w = th.getBoundingClientRect().width;
+      if (cloneThs[i]) {
+        cloneThs[i].style.width    = w + 'px';
+        cloneThs[i].style.minWidth = w + 'px';
+        cloneThs[i].style.maxWidth = w + 'px';
+      }
+      totalW += w;
+    });
+    cloneTbl.style.tableLayout = 'auto';
+    cloneTbl.style.width       = totalW + 'px';
+    cloneTbl.style.minWidth    = '0';
+    inner.scrollLeft = wrap.scrollLeft;
+  }
+  function update() {
+    const theadBottom = thead.getBoundingClientRect().bottom;
+    if (theadBottom <= 0) { syncWidths(); fixed.style.display = 'block'; }
+    else { fixed.style.display = 'none'; }
+  }
+  window.addEventListener('scroll', () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(update);
+  }, { passive: true });
+  wrap.addEventListener('scroll', () => { inner.scrollLeft = wrap.scrollLeft; }, { passive: true });
+}
+
+// ── CANCHA SELECTOR ───────────────────────────────────────────────────────────
+function onCselChange() {
+  const val = document.getElementById('csel').value;
+  if (val === '__nueva__') { openNuevaCancha(); }
+  else if (val === '__gestionar__') { openGestionar(); }
+  else { populateHcpTable(); }
+}
+
+function openNuevaCancha() {
+  const grid = document.getElementById('nc-holes-grid');
+  if (!grid.children.length) {
+    for (let i = 0; i < 9; i++) {
+      const h1 = i + 1, h2 = i + 10;
+      [h1, h2].forEach(h => {
+        const d = document.createElement('div'); d.className = 'nc-hole';
+        d.innerHTML =
+          `<span class="nc-hole-lbl">H${h}</span>` +
+          `<input type="number" id="nc-par${h}" min="3" max="5" placeholder="Par" inputmode="numeric">` +
+          `<input type="number" id="nc-hcp${h}" min="1" max="18" placeholder="Hcp" inputmode="numeric">`;
+        grid.appendChild(d);
+      });
+    }
+  }
+  document.getElementById('nc-toast').textContent = '';
+  document.getElementById('nc-overlay').classList.add('open');
+}
+
+function cerrarNuevaCancha() {
+  document.getElementById('nc-overlay').classList.remove('open');
+  const sel = document.getElementById('csel');
+  for (let i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value !== '__nueva__' && sel.options[i].value !== '__gestionar__') {
+      sel.value = sel.options[i].value; break;
+    }
+  }
+  populateHcpTable();
+}
+
+function openGestionar() {
+  renderGcLista();
+  document.getElementById('gc-msg').textContent = '';
+  document.getElementById('gc-overlay').classList.add('open');
+}
+
+function cerrarGestionar() {
+  document.getElementById('gc-overlay').classList.remove('open');
+  const sel = document.getElementById('csel');
+  for (let i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value !== '__nueva__' && sel.options[i].value !== '__gestionar__') {
+      sel.value = sel.options[i].value; break;
+    }
+  }
+  populateHcpTable();
+}
+
+function renderGcLista() {
+  const saved = JSON.parse(localStorage.getItem('custom_courses_ryder') || '[]');
+  const lista = document.getElementById('gc-lista');
+  if (saved.length === 0) {
+    lista.innerHTML = '<p class="gc-empty">No hay canchas personalizadas guardadas.</p>';
+    return;
+  }
+  lista.innerHTML = saved.map((c, i) =>
+    `<div class="gc-item">
+      <span class="gc-item-name">${c.name}</span>
+      <button class="gc-btn-del" onclick="gcBorrar(${i})">✕ Borrar</button>
+    </div>`
+  ).join('');
+}
+
+function gcBorrar(i) {
+  const saved = JSON.parse(localStorage.getItem('custom_courses_ryder') || '[]');
+  const nombre = saved[i].name;
+  saved.splice(i, 1);
+  localStorage.setItem('custom_courses_ryder', JSON.stringify(saved));
+  delete COURSES[nombre];
+  const sel = document.getElementById('csel');
+  const opt = sel.querySelector(`option[value="${nombre}"]`);
+  if (opt) sel.removeChild(opt);
+  document.getElementById('gc-msg').textContent = `✅ "${nombre}" borrada.`;
+  renderGcLista();
+}
+
+function ncToast(msg, ok) {
+  const t = document.getElementById('nc-toast');
+  t.textContent = msg;
+  t.style.color = ok ? '#90ee90' : '#f08080';
+}
+
+function guardarNuevaCancha() {
+  const nombre = document.getElementById('nc-nombre').value.trim();
+  const ubicacion = document.getElementById('nc-ubicacion').value.trim();
+  if (!nombre) { ncToast('⚠ Ingresá el nombre de la cancha.', false); return; }
+  const pars = [], hcps = [];
+  for (let h = 1; h <= 18; h++) {
+    const par = parseInt(document.getElementById(`nc-par${h}`).value);
+    const hcp = parseInt(document.getElementById(`nc-hcp${h}`).value);
+    if (isNaN(par) || par < 3 || par > 5) { ncToast(`⚠ Par inválido en hoyo ${h}.`, false); return; }
+    if (isNaN(hcp) || hcp < 1 || hcp > 18) { ncToast(`⚠ HCP inválido en hoyo ${h}.`, false); return; }
+    pars.push(par); hcps.push(hcp);
+  }
+  const uniq = new Set(hcps);
+  if (uniq.size !== 18) {
+    const dups = [...new Set(hcps.filter((v,i,a)=>a.indexOf(v)!==i))].sort((a,b)=>a-b);
+    ncToast(`⚠ HCP repetidos: ${dups.join(', ')}.`, false); return;
+  }
+  const courseData = hcps.map((hcp, i) => [pars[i], hcp]);
+  COURSES[nombre] = courseData;
+  const saved = JSON.parse(localStorage.getItem('custom_courses_ryder') || '[]');
+  const idx = saved.findIndex(c => c.name === nombre);
+  const entry = { name: nombre, location: ubicacion, data: courseData };
+  if (idx >= 0) saved[idx] = entry; else saved.push(entry);
+  localStorage.setItem('custom_courses_ryder', JSON.stringify(saved));
+  const sel = document.getElementById('csel');
+  if (!sel.querySelector(`option[value="${nombre}"]`)) {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = nombre;
+    sel.insertBefore(opt, sel.querySelector('option[value="__nueva__"]'));
+  }
+  sel.value = nombre;
+  ncToast('✅ ¡Cancha guardada!', true);
+  setTimeout(() => {
+    document.getElementById('nc-overlay').classList.remove('open');
+    document.getElementById('csel').value = nombre;
+    populateHcpTable();
+  }, 1500);
+}
+
+// ── INSTRUCCIONES ─────────────────────────────────────────────────────────────
+function openInstructions()  { document.getElementById('modal-instrucciones').classList.add('open'); }
+function closeInstructions() { document.getElementById('modal-instrucciones').classList.remove('open'); }
+
+// ── SHARE ─────────────────────────────────────────────────────────────────────
+function shareCard() {
+  const btn = document.querySelector('.btn-share');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Capturando...';
+  btn.disabled = true;
+  function doCapture() {
+    const el = document.getElementById('scorecard');
+    html2canvas(el, {
+      backgroundColor: '#0d0d20',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    }).then(function(canvas) {
+      const ctx = canvas.getContext('2d');
+      const hoy = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+      const pie = 'Ryder CUP ⛳  ' + hoy;
+      ctx.font = 'italic bold ' + Math.round(canvas.width * 0.030) + 'px sans-serif';
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      const tw = ctx.measureText(pie).width;
+      const px = canvas.width - tw - 18, py = canvas.height - 12;
+      ctx.fillText(pie, px + 2, py + 2);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText(pie, px, py);
+      canvas.toBlob(function(blob) {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        const file = new File([blob], 'RyderCUP-tarjeta.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: 'SUSA Ryder CUP — Tarjeta' }).catch(function() {});
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'RyderCUP-tarjeta.png';
+          document.body.appendChild(a); a.click();
+          document.body.removeChild(a);
+          setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        }
+      }, 'image/png');
+    }).catch(function(e) {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+    });
+  }
+  if (window.html2canvas) {
+    doCapture();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = doCapture;
+    s.onerror = function() { btn.innerHTML = orig; btn.disabled = false; };
+    document.head.appendChild(s);
+  }
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────────────────────────
+function goBack() {
+  _pendingScores = {};
+  players.forEach((p, j) => {
+    for (let h = 0; h < 18; h++) {
+      const el = document.getElementById(`g${j}_${h}`);
+      if (el && el.value.trim() !== '') _pendingScores[`${j}_${h}`] = el.value.trim();
+    }
+  });
+  _savedGameMode = gameMode;
+  _savedHcpMode  = hcpMode;
+  document.getElementById('scorecard').style.display = 'none';
+  document.getElementById('setup').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function newGame() {
+  _pendingScores = null;
+  _savedGameMode = null;
+  _savedHcpMode  = null;
+  try { localStorage.removeItem(STATE_KEY); } catch(e) {}
+  for (let i = 0; i < 4; i++) {
+    const ini = document.getElementById(`ini${i}`);
+    const hcp = document.getElementById(`hcp${i}`);
+    if (ini) ini.value = '';
+    if (hcp) hcp.value = '';
+  }
+  document.getElementById('scorecard').style.display = 'none';
+  document.getElementById('setup').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>

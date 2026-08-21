@@ -1,0 +1,28 @@
+Vamos a jugar un campeonato de golf que dura 3 días
+Son 2 equipos "Tinto" y "Rose" de 8 jugadores c/U
+Se arman 4 líneas de salida, 2 jugadores de tinto contra 2 jugadores de Rose
+Se juegan 2 modalidades en c/línea, Match y fourball
+El match (1 de tinto Vs 1 de Rose) suma 1 pto
+El Fourball (2 de tinto Vs 2 de Rose) suma 2 puntos
+El total de la linea aporta 4 puntos al torneo
+Así se repite el día siguiente y se van acumulando los puntos obtenidos x cada equipo
+El 3° día los puntos se duplican
+Al finalizar gana el equipo que mas punto sumó
+
+Ingresar las 16 iniciales de los jugadores (8 para c/equipo)
+
+Al iniciar el día 1 se arma una grilla con los jugadores que integran c/línea (2 de Tinto y 2 de Rose)
+
+Y al finalizar se le asignan los puntos que logró cada jugador
+
+Al día siguiente y al 3° día igual
+
+Quiero ver el resultado final de cada equipo y que me indique que jugador/jugadores se hicieron dueños de la "Golden Wooden Spoon" (aquellos que no aportaron ningún punto al equipo)
+
+Ahora quiero hacer otra aplicación, también para cargar resultados diarios de golf-
+Quisiera hacerlo en html para correrlo desde el celular, no tener que instalar nada y funciona en Android y Apple
+El problema es que si cierro el navegador, pierdo los datos del día anterior
+Tenes idea como continuar dia a dia?
+
+ 
+ 
