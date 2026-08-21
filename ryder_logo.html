@@ -1,0 +1,168 @@
+<title>SUASA Ryder CUP</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&display=swap">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: #0d0d1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo {
+  width: min(90vw, 90vh);
+  aspect-ratio: 1;
+  filter:
+    drop-shadow(0 0 48px rgba(255,215,0,0.25))
+    drop-shadow(0 4px 24px rgba(0,0,0,0.9));
+}
+</style>
+
+<div class="logo">
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gld" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#ffd700"/>
+      <stop offset="35%"  stop-color="#ffec6e"/>
+      <stop offset="65%"  stop-color="#c8960c"/>
+      <stop offset="100%" stop-color="#ffd700"/>
+    </linearGradient>
+    <linearGradient id="gld2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#ffd700"/>
+      <stop offset="50%"  stop-color="#ffec6e"/>
+      <stop offset="100%" stop-color="#c8960c"/>
+    </linearGradient>
+    <radialGradient id="bgr" cx="50%" cy="38%" r="62%">
+      <stop offset="0%"   stop-color="#1c1c42"/>
+      <stop offset="100%" stop-color="#080814"/>
+    </radialGradient>
+    <radialGradient id="ball" cx="36%" cy="33%" r="65%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d0d0d0"/>
+    </radialGradient>
+    <!-- Arc text paths -->
+    <path id="topArc" d="M 38,150 A 112,112 0 0,1 262,150" fill="none"/>
+    <path id="botArc" d="M 38,150 A 112,112 0 0,0 262,150" fill="none"/>
+    <!-- Clip halves for team tints -->
+    <clipPath id="lhalf"><rect x="0"   y="0" width="150" height="300"/></clipPath>
+    <clipPath id="rhalf"><rect x="150" y="0" width="150" height="300"/></clipPath>
+    <!-- Clip to circle so nothing leaks outside -->
+    <clipPath id="circ"><circle cx="150" cy="150" r="141"/></clipPath>
+  </defs>
+
+  <!-- ── OUTER GOLD RING ── -->
+  <circle cx="150" cy="150" r="147" fill="url(#gld)"/>
+
+  <!-- ── BADGE INTERIOR ── -->
+  <circle cx="150" cy="150" r="141" fill="url(#bgr)"/>
+
+  <!-- ── TEAM HALF-TINTS (clipped to circle) ── -->
+  <circle cx="150" cy="150" r="141" fill="#7a0808" opacity="0.20" clip-path="url(#lhalf)"/>
+  <circle cx="150" cy="150" r="141" fill="#7a1040" opacity="0.20" clip-path="url(#rhalf)"/>
+
+  <!-- ── INNER DECORATIVE RING ── -->
+  <circle cx="150" cy="150" r="126" fill="none" stroke="url(#gld)" stroke-width="1.2" opacity="0.55"/>
+
+  <!-- ── CARDINAL DOTS ── -->
+  <circle cx="150" cy="4"   r="3.8" fill="url(#gld)"/>
+  <circle cx="150" cy="296" r="3.8" fill="url(#gld)"/>
+  <circle cx="4"   cy="150" r="3.8" fill="url(#gld)"/>
+  <circle cx="296" cy="150" r="3.8" fill="url(#gld)"/>
+
+  <!-- ── SUBTLE VERTICAL DIVIDER ── -->
+  <line x1="150" y1="24" x2="150" y2="276"
+        stroke="url(#gld)" stroke-width="0.7" opacity="0.18"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       GOLF CLUB 1 — rotate(−35°)
+       In this rotation: handle → top-LEFT, head → bottom-RIGHT
+       Club head is an asymmetric IRON blade:
+       shaft connects at HEEL (left edge of head),
+       head extends to the TOE (right / positive-x in local space)
+       ═══════════════════════════════════════════════════════ -->
+  <g transform="translate(150,150) rotate(-35)">
+    <!-- Grip cap -->
+    <ellipse cx="0" cy="-63" rx="5.5" ry="5.5" fill="url(#gld)"/>
+    <!-- Shaft -->
+    <rect x="-3.5" y="-63" width="7" height="114" rx="3" fill="url(#gld)"/>
+    <!-- Grip wrap bands -->
+    <line x1="-3.5" y1="-51" x2="3.5" y2="-51" stroke="#906000" stroke-width="1.8" opacity="0.55"/>
+    <line x1="-3.5" y1="-44" x2="3.5" y2="-44" stroke="#906000" stroke-width="1.8" opacity="0.55"/>
+    <line x1="-3.5" y1="-37" x2="3.5" y2="-37" stroke="#906000" stroke-width="1.8" opacity="0.55"/>
+    <!-- Hosel (shaft-to-head connector, at heel) -->
+    <rect x="-3" y="46" width="6" height="14" rx="1.5" fill="url(#gld2)"/>
+    <!--
+      Iron head — ASYMMETRIC:
+      Heel (left) connects to hosel. Toe extends to the RIGHT (+x).
+      Trapezoidal blade: slightly taller at heel, slightly tapered to toe.
+      Face is slightly angled (toe higher than heel = real iron loft geometry).
+    -->
+    <path d="M -3,58  L 36,55  L 38,67  L -3,70  Z" fill="url(#gld)"/>
+    <!-- Score lines on club face -->
+    <line x1="-1" y1="60.5" x2="35" y2="57.5" stroke="#806000" stroke-width="0.8" opacity="0.6"/>
+    <line x1="-1" y1="63.5" x2="35" y2="60.5" stroke="#806000" stroke-width="0.8" opacity="0.6"/>
+    <line x1="-1" y1="66.5" x2="35" y2="63.5" stroke="#806000" stroke-width="0.8" opacity="0.6"/>
+    <!-- Sole chamfer (bottom edge highlight) -->
+    <line x1="-3" y1="70" x2="38" y2="67" stroke="url(#gld2)" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════
+       GOLF CLUB 2 — rotate(+35°)
+       Mirror image of Club 1:
+       handle → top-RIGHT, head → bottom-LEFT
+       Iron blade extends to the LEFT (−x in local space)
+       ═══════════════════════════════════════════════════════ -->
+  <g transform="translate(150,150) rotate(35)">
+    <ellipse cx="0" cy="-63" rx="5.5" ry="5.5" fill="url(#gld)"/>
+    <rect x="-3.5" y="-63" width="7" height="114" rx="3" fill="url(#gld)"/>
+    <line x1="-3.5" y1="-51" x2="3.5" y2="-51" stroke="#906000" stroke-width="1.8" opacity="0.55"/>
+    <line x1="-3.5" y1="-44" x2="3.5" y2="-44" stroke="#906000" stroke-width="1.8" opacity="0.55"/>
+    <line x1="-3.5" y1="-37" x2="3.5" y2="-37" stroke="#906000" stroke-width="1.8" opacity="0.55"/>
+    <rect x="-3" y="46" width="6" height="14" rx="1.5" fill="url(#gld2)"/>
+    <!-- Mirror: heel on RIGHT (+x side), toe extends LEFT (−x) -->
+    <path d="M 3,58  L -36,55  L -38,67  L 3,70  Z" fill="url(#gld)"/>
+    <line x1="1" y1="60.5" x2="-35" y2="57.5" stroke="#806000" stroke-width="0.8" opacity="0.6"/>
+    <line x1="1" y1="63.5" x2="-35" y2="60.5" stroke="#806000" stroke-width="0.8" opacity="0.6"/>
+    <line x1="1" y1="66.5" x2="-35" y2="63.5" stroke="#806000" stroke-width="0.8" opacity="0.6"/>
+    <line x1="3" y1="70" x2="-38" y2="67" stroke="url(#gld2)" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <!-- ── GOLF BALL at crossing point ── -->
+  <circle cx="150" cy="150" r="19" fill="url(#ball)"/>
+  <!-- Dimples -->
+  <g fill="#b8b8b8" opacity="0.75">
+    <circle cx="150" cy="140" r="2.2"/>
+    <circle cx="143" cy="146" r="2.2"/>
+    <circle cx="157" cy="146" r="2.2"/>
+    <circle cx="150" cy="160" r="2.2"/>
+    <circle cx="144" cy="155" r="1.8"/>
+    <circle cx="156" cy="155" r="1.8"/>
+    <circle cx="144" cy="144" r="1.8"/>
+    <circle cx="156" cy="144" r="1.8"/>
+  </g>
+
+  <!-- ── FLAG rising from ball ── -->
+  <line x1="150" y1="131" x2="150" y2="104" stroke="url(#gld)" stroke-width="2.2"/>
+  <polygon points="150,104 170,112 150,121"
+           fill="#bb1a1a" stroke="url(#gld)" stroke-width="0.8" stroke-linejoin="round"/>
+
+  <!-- ── TEAM COLOR DOTS (left = Tinto, right = Rosé) ── -->
+  <circle cx="58"  cy="150" r="6.5" fill="#8B1a1a" stroke="url(#gld)" stroke-width="1"/>
+  <circle cx="58"  cy="150" r="3"   fill="#cc3333" opacity="0.75"/>
+  <circle cx="242" cy="150" r="6.5" fill="#7a1540" stroke="url(#gld)" stroke-width="1"/>
+  <circle cx="242" cy="150" r="3"   fill="#d45a80" opacity="0.75"/>
+
+  <!-- ── ARC TEXT ── -->
+  <!-- SUASA — top -->
+  <text font-family="Cinzel, serif" font-size="17" font-weight="900"
+        fill="url(#gld)" letter-spacing="7">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">SUASA</textPath>
+  </text>
+  <!-- RYDER CUP — bottom -->
+  <text font-family="Cinzel, serif" font-size="12.5" font-weight="600"
+        fill="url(#gld)" letter-spacing="3.5">
+    <textPath href="#botArc" startOffset="50%" text-anchor="middle">RYDER  CUP</textPath>
+  </text>
+
+</svg>
+</div>
