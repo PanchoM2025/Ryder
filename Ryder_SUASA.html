@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>SUASA Ryder CUP</title>
-<link rel="manifest" href="manifest.json?v=20260821">
+<link rel="manifest" href="manifest.json?v=20260822">
 <link rel="icon" href="icon-ryder-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-ryder-192.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -22,7 +22,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260821-001";
+const VERSION = "20260822-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -490,16 +490,28 @@ th.h-rose  { color:#ffb0d0 !important; }
 <!-- ── MODAL INSTRUCCIONES ── -->
 <div id="modal-instrucciones" onclick="if(event.target===this)closeInstructions()">
   <div class="modal-box">
-    <h2>🏆 SUSA Ryder CUP</h2>
-    <p>Cada línea de 4 jugadores disputa 3 formatos simultáneos:</p>
-    <div class="m-mod">⚔️ Match 1 — J1 🍷 vs J3 🌸</div>
-    <div class="m-mod-desc">Match play individual. Menor neto gana el hoyo = 1 pt. HCP 85%.</div>
-    <div class="m-mod">⚔️ Match 2 — J2 🍷 vs J4 🌸</div>
-    <div class="m-mod-desc">Match play individual. Menor neto gana el hoyo = 1 pt. HCP 85%.</div>
-    <div class="m-mod">⛳ Fourball — Tinto vs Rosé</div>
-    <div class="m-mod-desc">"1° y 2° mejores" o "A la mejor". El equipo Tinto (J1+J2) contra el equipo Rosé (J3+J4). HCP 85%.</div>
-    <p style="margin-top:12px;font-size:13px;color:#a8a8d8">EL NETO = suma de todos los puntos ganados por cada equipo en los 3 formatos del día.</p>
-    <p style="margin-top:8px;font-size:12px;color:#a8a8d8">El orden de ingreso define los matches: <br><b style="color:#ff9999">J1 vs J3</b> &nbsp;·&nbsp; <b style="color:#ffb0d0">J2 vs J4</b></p>
+    <h2>🏆 SUASA Ryder CUP</h2>
+    <p>Cada línea de 4 jugadores disputa <b style="color:#ffd700">3 formatos simultáneos</b> por ronda.</p>
+
+    <div class="m-mod">⚔️ Match 1 &nbsp;—&nbsp; J1 🍷 vs J3 🌸 &nbsp;<span style="color:#ffd700;font-size:12px">[ 1 pt ]</span></div>
+    <div class="m-mod-desc">Match play individual hoyo a hoyo. El que hace menor neto gana el hoyo. Quien gana más hoyos gana el match y suma <b style="color:#ffd700">1 pt</b> para su equipo. Empate = <b style="color:#ffd700">½ pt</b> c/u. HCP 85%.</div>
+
+    <div class="m-mod">⚔️ Match 2 &nbsp;—&nbsp; J2 🍷 vs J4 🌸 &nbsp;<span style="color:#ffd700;font-size:12px">[ 1 pt ]</span></div>
+    <div class="m-mod-desc">Ídem Match 1. Suma <b style="color:#ffd700">1 pt</b> al equipo ganador. Empate = <b style="color:#ffd700">½ pt</b> c/u.</div>
+
+    <div class="m-mod">⛳ Fourball &nbsp;—&nbsp; Tinto vs Rosé &nbsp;<span style="color:#ffd700;font-size:12px">[ 2 pts ]</span></div>
+    <div class="m-mod-desc">Tinto (J1+J2) vs Rosé (J3+J4). Se juega hoyo a hoyo comparando la mejor bola de cada equipo (<b>"A la mejor"</b>) o la 1ª y 2ª mejores (<b>"1° y 2° mejores"</b>). El equipo que gana el Fourball suma <b style="color:#ffd700">2 pts</b>. Empate = <b style="color:#ffd700">1 pt</b> c/u. HCP 85%.</div>
+
+    <div style="margin-top:14px;background:#0a0a20;border-radius:8px;padding:10px 12px;border:1px solid #333360;">
+      <div style="color:#ffd700;font-size:13px;font-weight:bold;margin-bottom:6px;text-align:center;">⚡ EL NETO — Puntos por línea</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#d8d8f8;margin-bottom:3px;"><span>Match 1 (J1 vs J3)</span><span style="color:#ffd700">máx. 1 pt</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#d8d8f8;margin-bottom:3px;"><span>Match 2 (J2 vs J4)</span><span style="color:#ffd700">máx. 1 pt</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:#d8d8f8;margin-bottom:6px;"><span>Fourball (equipo)</span><span style="color:#ffd700">máx. 2 pts</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:bold;border-top:1px solid #333360;padding-top:6px;"><span style="color:#a8a8d8">TOTAL por línea</span><span style="color:#ffd700">máx. 4 pts</span></div>
+    </div>
+
+    <p style="margin-top:12px;font-size:12px;color:#a8a8d8;text-align:center;">El orden de ingreso define los matches:<br><b style="color:#ff9999">J1 🍷 vs J3 🌸</b> &nbsp;·&nbsp; <b style="color:#ffb0d0">J2 🍷 vs J4 🌸</b></p>
+    <p style="margin-top:6px;font-size:11px;color:#666;text-align:center;">Los resultados de esta tarjeta se ingresan en el Ryder Manager para el marcador del torneo.</p>
     <button class="modal-close" onclick="closeInstructions()">Cerrar</button>
   </div>
 </div>
