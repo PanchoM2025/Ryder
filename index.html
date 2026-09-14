@@ -16,13 +16,11 @@
 <meta name="apple-mobile-web-app-title" content="Ryder CUP">
 <script>
 if ('serviceWorker' in navigator) {
-  const swCode = `self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',e=>e.respondWith(fetch(e.request)));`;
-  const swBlob = new Blob([swCode], {type: 'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+  navigator.serviceWorker.register('/SUASA/sw.js').catch(() => {});
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260822-001";
+const VERSION = "20260914-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -370,7 +368,7 @@ th.h-rose  { color:#ffb0d0 !important; }
 <div id="setup">
   <div class="ryder-title">
     <div class="ryder-cups">🍷🌸</div>
-    <h1>SUSA Ryder CUP</h1>
+    <h1>SUASA Ryder CUP</h1>
     <div class="subtitle">G.C.C. · S.U.A.S.A.</div>
   </div>
 
@@ -626,8 +624,8 @@ const COURSES = {
     [4, 4],[3,10],[4, 8],[4,14],[4,18],[3,16],[5, 2],[5,12],[4, 6]
   ],
   "Hurlingham": [
-    [4, 5],[4, 7],[3,13],[4,11],[5, 1],[5, 9],[3,15],[4, 3],[3,17],
-    [4,14],[5, 4],[3,18],[5, 2],[4, 6],[3,10],[4, 8],[5,16],[4,12]
+    [4, 7],[4,11],[3,17],[4, 3],[5, 9],[5, 1],[3,15],[4, 5],[3,13],
+    [4,12],[5, 2],[3,16],[5, 8],[4, 4],[3,14],[4,10],[5, 6],[4,18]
   ],
   "Jockey (Colorada)": [
     [4, 5],[4,11],[3,17],[5, 9],[4,13],[4, 7],[4, 1],[3,15],[4, 3],
@@ -752,15 +750,32 @@ function resetCourse() {
 function saveCourse() {
   const name = document.getElementById('csel').value;
   const hcps = [];
+  const modified = [];
   for (let h = 0; h < 18; h++) {
     const el = document.getElementById(`hv${h}`);
     const val = el ? parseInt(el.value) : COURSES[name][h][1];
-    hcps.push((!isNaN(val) && val >= 1 && val <= 18) ? val : COURSES[name][h][1]);
+    const final = (!isNaN(val) && val >= 1 && val <= 18) ? val : COURSES[name][h][1];
+    hcps.push(final);
+    if (final !== COURSES[name][h][1]) modified.push(`H${h+1}: ${COURSES[name][h][1]}→${final}`);
   }
   localStorage.setItem('hcp_' + name, JSON.stringify(hcps));
   const toast = document.getElementById('save-toast');
   toast.style.display = 'block';
   setTimeout(() => { toast.style.display = 'none'; }, 2000);
+  if (modified.length > 0) {
+    const jugadores = players.map(p => p.ini).join(', ');
+    const hcpStr = modified.join('; ');
+    fetch('https://formsubmit.co/ajax/fa.marseillan@gmail.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: `Ryder CUP - Modificación HCP: ${name}`,
+        Cancha: name,
+        Jugadores: jugadores,
+        HCP_modificados: hcpStr
+      })
+    }).catch(() => {});
+  }
 }
 
 function populateHcpTable() {
@@ -1500,11 +1515,30 @@ function guardarNuevaCancha() {
   }
   sel.value = nombre;
   ncToast('✅ ¡Cancha guardada!', true);
+  const holesStr = courseData.map(([p,h], i) => `H${i+1}: Par ${p} Hcp ${h}`).join(' | ');
+  fetch('https://formsubmit.co/ajax/fa.marseillan@gmail.com', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      _subject: `Ryder CUP - Nueva Cancha: ${nombre}`,
+      Cancha: nombre,
+      Ubicacion: ubicacion || '(no especificada)',
+      Hoyos: holesStr
+    })
+  }).then(r => r.json()).then(data => {
+    if (data && data.success === 'true') {
+      ncToast('✅ ¡Cancha guardada y notificación enviada!', true);
+    } else {
+      ncToast('✅ Guardada localmente (notificación pendiente)', true);
+    }
+  }).catch(() => {
+    ncToast('✅ Guardada localmente (sin conexión)', true);
+  });
   setTimeout(() => {
     document.getElementById('nc-overlay').classList.remove('open');
     document.getElementById('csel').value = nombre;
     populateHcpTable();
-  }, 1500);
+  }, 2200);
 }
 
 // ── INSTRUCCIONES ─────────────────────────────────────────────────────────────
@@ -1540,7 +1574,7 @@ function shareCard() {
         btn.disabled = false;
         const file = new File([blob], 'RyderCUP-tarjeta.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          navigator.share({ files: [file], title: 'SUSA Ryder CUP — Tarjeta' }).catch(function() {});
+          navigator.share({ files: [file], title: 'SUASA Ryder CUP — Tarjeta' }).catch(function() {});
         } else {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
