@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260917-001";
+const VERSION = "20260917-002";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -876,12 +876,20 @@ function selectHcpMode(mode) {
 }
 
 function finishStartGame() {
-  document.getElementById('sc-title').textContent = _tmpCourseName + ' — Ryder CUP';
-  buildScorecard();
-  buildTeamSection();
-  buildRyderMatchSection();
+  // Cambiar pantalla PRIMERO para que cualquier error en los builds
+  // no deje al usuario atrapado en el setup
   document.getElementById('setup').style.display = 'none';
   document.getElementById('scorecard').style.display = 'block';
+  document.getElementById('sc-title').textContent = _tmpCourseName + ' — Ryder CUP';
+  try {
+    buildScorecard();
+  } catch(e) { console.error('buildScorecard:', e); }
+  try {
+    buildTeamSection();
+  } catch(e) { console.error('buildTeamSection:', e); }
+  try {
+    buildRyderMatchSection();
+  } catch(e) { console.error('buildRyderMatchSection:', e); }
   if (_pendingScores !== null) {
     Object.entries(_pendingScores).forEach(([key, val]) => {
       const el = document.getElementById(`g${key}`);
