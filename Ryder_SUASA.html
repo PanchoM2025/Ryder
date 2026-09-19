@@ -767,6 +767,7 @@ function resetCourse() {
 
 function saveCourse() {
   const name = document.getElementById('csel').value;
+  const prevSaved = JSON.parse(localStorage.getItem('hcp_' + name) || 'null');
   const hcps = [];
   const modified = [];
   for (let h = 0; h < 18; h++) {
@@ -774,7 +775,8 @@ function saveCourse() {
     const val = el ? parseInt(el.value) : COURSES[name][h][1];
     const final = (!isNaN(val) && val >= 1 && val <= 18) ? val : COURSES[name][h][1];
     hcps.push(final);
-    if (final !== COURSES[name][h][1]) modified.push(`H${h+1}: ${COURSES[name][h][1]}→${final}`);
+    const prev = (prevSaved && prevSaved[h] != null) ? prevSaved[h] : COURSES[name][h][1];
+    if (final !== prev) modified.push(`H${h+1}: ${prev}→${final}`);
   }
   localStorage.setItem('hcp_' + name, JSON.stringify(hcps));
   const toast = document.getElementById('save-toast');
