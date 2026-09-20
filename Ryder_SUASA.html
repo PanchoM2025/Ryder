@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260919-001";
+const VERSION = "20260920-002";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -754,6 +754,13 @@ function restoreState() {
   document.getElementById('scorecard').style.display = 'block';
   return true;
 }
+
+// Guardado adicional para cierres abruptos o cuando la app pasa a segundo plano.
+// La partida solo se elimina expresamente desde el botón "Nueva Partida".
+window.addEventListener('pagehide', saveState);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveState();
+});
 
 function resetCourse() {
   const name = document.getElementById('csel').value;
