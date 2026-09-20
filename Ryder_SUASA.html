@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260920-002";
+const VERSION = "20260920-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -742,25 +742,20 @@ function restoreState() {
     course = saved.course;
   }
   document.getElementById('sc-title').textContent = saved.courseName || '';
-  buildScorecard();
-  buildTeamSection();
-  buildRyderMatchSection();
+  // Mostrar la pantalla PRIMERO (igual que finishStartGame) para que
+  // cualquier error en los builds no deje al usuario atrapado en el setup
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('scorecard').style.display = 'block';
+  try { buildScorecard(); } catch(e) { console.error('restoreState buildScorecard:', e); }
+  try { buildTeamSection(); } catch(e) { console.error('restoreState buildTeamSection:', e); }
+  try { buildRyderMatchSection(); } catch(e) { console.error('restoreState buildRyderMatchSection:', e); }
   Object.entries(saved.scores || {}).forEach(([key, val]) => {
     const el = document.getElementById(`g${key}`);
     if (el) el.value = val;
   });
-  recalcAll();
-  document.getElementById('setup').style.display = 'none';
-  document.getElementById('scorecard').style.display = 'block';
+  try { recalcAll(); } catch(e) { console.error('restoreState recalcAll:', e); }
   return true;
 }
-
-// Guardado adicional para cierres abruptos o cuando la app pasa a segundo plano.
-// La partida solo se elimina expresamente desde el botón "Nueva Partida".
-window.addEventListener('pagehide', saveState);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') saveState();
-});
 
 function resetCourse() {
   const name = document.getElementById('csel').value;
@@ -1362,17 +1357,22 @@ function recalcAll() {
       totPts += pts; totAAG += holeAAG;
     }
     const any = f9ok||b9ok;
-    set(`f9_${j}`,   !f9ok ? '—' : f9pickup ? 'X' : f9g);
-    set(`b9_${j}`,   !b9ok ? '—' : b9pickup ? 'X' : b9g);
-    set(`tot_${j}`,  !any  ? '—' : (f9pickup||b9pickup) ? 'X' : f9g+b9g);
+    // Si hay pickup mostramos el parcial de los hoyos jugados con '*'
+    // (en vez de 'X' que parecía que la app se colgaba)
+    set(`f9_${j}`,   !f9ok ? '—' : f9pickup ? (f9g > 0 ? f9g + '*' : 'X') : f9g);
+    set(`b9_${j}`,   !b9ok ? '—' : b9pickup ? (b9g > 0 ? b9g + '*' : 'X') : b9g);
+    set(`tot_${j}`,  !any  ? '—' : (f9pickup||b9pickup) ? ((f9g+b9g) > 0 ? (f9g+b9g) + '*' : 'X') : f9g+b9g);
     set(`stbl_${j}`, any   ? totPts : '—');
     set(`aag_${j}`,  any   ? totAAG : '—');
   });
 
-  const teamResult  = recalcTeam();
-  const matchResult = recalcRyderMatches();
-  updateNeto(matchResult, teamResult);
-  saveState();
+  let teamResult, matchResult;
+  try {
+    teamResult  = recalcTeam();
+    matchResult = recalcRyderMatches();
+    updateNeto(matchResult, teamResult);
+  } catch(e) { console.error('recalcAll team/match:', e); }
+  try { saveState(); } catch(e) {}
 }
 
 // ── STICKY HEADER ─────────────────────────────────────────────────────────────
