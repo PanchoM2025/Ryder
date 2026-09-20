@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260920-001";
+const VERSION = "20260920-002";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -247,9 +247,9 @@ input.hv:focus { outline:2px solid #ffd700; }
 .sc-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 table.sc { border-collapse:collapse; min-width:100%; font-size:15px; table-layout:fixed; }
 table.sc th { background:#0d0d2a; color:#a8a8d8; padding:6px 2px; text-align:center; font-size:16px; white-space:nowrap; }
-#sticky-sc-header { display:none; position:fixed; top:0; z-index:100; overflow:hidden; background:#0d0d2a; border-bottom:2px solid #333360; }
-#sticky-sc-header .sh-inner { overflow:hidden; }
-#sticky-sc-header table.sc { margin:0; }
+.sticky-tbl-header { display:none; position:fixed; top:0; z-index:100; overflow:hidden; background:#0d0d2a; border-bottom:2px solid #333360; }
+.sticky-tbl-header .sh-inner { overflow:hidden; }
+.sticky-tbl-header table.sc { margin:0; }
 table.sc td { padding:4px 2px; text-align:center; white-space:nowrap; }
 table.sc th.c-fix, table.sc td.c-fix { width:26px; max-width:26px; font-size:16px; }
 table.sc th.c-player, table.sc td.c-player { width:50px; }
@@ -996,7 +996,7 @@ function buildScorecard() {
   addSubRow('TOTAL',  'r-total', course.reduce((s,[p])=>s+p,0),          j=>`tot_${j}`);
   addResultRow('STABLEFORD','r-stbl', j=>`stbl_${j}`);
   addResultRow('AAG',       'r-aag',  j=>`aag_${j}`);
-  setupStickyHeader();
+  setupStickyHeader('sc-tbl', 'sticky-sc-header');
 }
 
 // ── FOURBALL: TINTO vs ROSÉ ───────────────────────────────────────────────────
@@ -1051,6 +1051,7 @@ function buildTeamSection() {
   addTeamRow('Vuelta', 'ta_b9','tb_b9','r-sub');
   addTeamRow('TOTAL',  'ta_tot','tb_tot','r-total');
   addTeamRow('DIFERENCIA','ta_dif','tb_dif','r-diff');
+  setupStickyHeader('team-tbl', 'sticky-team-header');
 }
 
 function calcHoleTeam(h) {
@@ -1183,6 +1184,7 @@ function buildRyderMatchSection() {
     `<td class="c-match" id="rmdif_1">—</td>` +
     `<td class="c-match" id="rmdif_3">—</td>`;
   tbody.appendChild(trDivider);
+  setupStickyHeader('tbl-ryder-match', 'sticky-match-header');
 }
 
 function calcHoleRyderMatch(h) {
@@ -1376,16 +1378,17 @@ function recalcAll() {
 }
 
 // ── STICKY HEADER ─────────────────────────────────────────────────────────────
-function setupStickyHeader() {
-  const old = document.getElementById('sticky-sc-header');
+function setupStickyHeader(tblId, stickyId) {
+  const old = document.getElementById(stickyId);
   if (old) old.remove();
-  const tbl  = document.getElementById('sc-tbl');
+  const tbl  = document.getElementById(tblId);
   if (!tbl) return;
   const thead = tbl.querySelector('thead');
   const wrap  = tbl.closest('.sc-wrap');
   if (!thead || !wrap) return;
   const fixed = document.createElement('div');
-  fixed.id = 'sticky-sc-header';
+  fixed.id = stickyId;
+  fixed.className = 'sticky-tbl-header';
   const inner = document.createElement('div');
   inner.className = 'sh-inner';
   const cloneTbl = document.createElement('table');
@@ -1419,7 +1422,8 @@ function setupStickyHeader() {
   }
   function update() {
     const theadBottom = thead.getBoundingClientRect().bottom;
-    if (theadBottom <= 0) { syncWidths(); fixed.style.display = 'block'; }
+    const tblBottom   = tbl.getBoundingClientRect().bottom;
+    if (theadBottom <= 0 && tblBottom > 0) { syncWidths(); fixed.style.display = 'block'; }
     else { fixed.style.display = 'none'; }
   }
   window.addEventListener('scroll', () => {
