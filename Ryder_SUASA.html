@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260920-001";
+const VERSION = "20260920-003";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -255,6 +255,7 @@ table.sc th.c-fix, table.sc td.c-fix { width:26px; max-width:26px; font-size:16p
 table.sc th.c-player, table.sc td.c-player { width:50px; }
 table.sc th.c-team,   table.sc td.c-team   { width:72px; }
 table.sc th.c-match,  table.sc td.c-match  { width:72px; }
+#tbl-ryder-match th.c-fix, #tbl-ryder-match td.c-fix { width:18px; max-width:18px; }
 table.sc td.lbl { text-align:left; padding-left:10px; font-weight:bold; }
 
 tr.r-even  td { background:#1c1c3a; }
@@ -264,6 +265,11 @@ tr.r-total td { background:#0d0d2a; color:#ffd700; font-weight:bold; font-size:1
 tr.r-stbl  td { background:#07071e; color:#90ee90; font-weight:bold; font-size:15px; }
 tr.r-aag   td { background:#07071e; color:#87ceeb; font-weight:bold; font-size:15px; }
 tr.r-diff  td { background:#050518; color:#ffd700; font-weight:bold; font-size:16px; border-top:2px solid #ffd700; }
+
+tr.r-sub   td.c-player, tr.r-sub   td.c-team, tr.r-sub   td.c-match { font-size:19px; }
+tr.r-total td.c-player, tr.r-total td.c-team, tr.r-total td.c-match { font-size:20px; }
+tr.r-stbl  td.c-player, tr.r-stbl  td.c-team, tr.r-stbl  td.c-match { font-size:19px; }
+tr.r-aag   td.c-player, tr.r-aag   td.c-team, tr.r-aag   td.c-match { font-size:19px; }
 
 /* score input */
 input.g {
@@ -1228,7 +1234,7 @@ function buildRyderMatchSection() {
   const thead = document.createElement('thead');
   // Column headers in order: J1(Tinto), J3(Rosé), J2(Tinto), J4(Rosé)
   const colColors = ['h-tinto','h-rose','h-tinto','h-rose'];
-  let th = '<tr><th class="c-fix">H</th><th class="c-fix">Par</th><th class="c-fix">HCP</th>';
+  let th = '<tr><th class="c-fix">H</th><th class="c-fix">HCP</th>';
   RYDER_ORDER.forEach((j, ci) => {
     const label = j===0?'J1':j===1?'J2':j===2?'J3':'J4';
     const emoji = (j===0||j===1) ? '🍷' : '🌸';
@@ -1242,13 +1248,13 @@ function buildRyderMatchSection() {
     const [par,hcpH] = course[h];
     const tr = document.createElement('tr');
     tr.className = h%2===0 ? 'r-even':'r-odd';
-    let html = `<td class="c-fix">${h+1}</td><td class="c-fix">${par}</td><td class="c-fix">${hcpH}</td>`;
+    let html = `<td class="c-fix">${h+1}</td><td class="c-fix">${hcpH}</td>`;
     RYDER_ORDER.forEach(j => html += `<td class="c-match" id="rm_${j}_${h}">·</td>`);
     tr.innerHTML = html; tbody.appendChild(tr);
   }
   function addRowMatch(label, mkId, css) {
     const tr = document.createElement('tr'); tr.className = css;
-    let html = `<td class="lbl" colspan="3">${label}</td>`;
+    let html = `<td class="lbl" colspan="2">${label}</td>`;
     RYDER_ORDER.forEach(j => html += `<td class="c-match" id="${mkId(j)}">—</td>`);
     tr.innerHTML = html; tbody.appendChild(tr);
   }
@@ -1261,7 +1267,7 @@ function buildRyderMatchSection() {
   // Separator row for Match 1 vs Match 2
   const trDivider = document.createElement('tr'); trDivider.className='r-sub';
   trDivider.innerHTML =
-    `<td class="lbl" colspan="3" style="text-align:center;font-size:11px;color:#a8a8c8">⚔️ MATCH 1 &nbsp;|&nbsp; ⚔️ MATCH 2</td>` +
+    `<td class="lbl" colspan="2" style="text-align:center;font-size:11px;color:#a8a8c8">⚔️ MATCH 1 &nbsp;|&nbsp; ⚔️ MATCH 2</td>` +
     `<td class="c-match" id="rmdif_0">—</td>` +
     `<td class="c-match" id="rmdif_2">—</td>` +
     `<td class="c-match" id="rmdif_1">—</td>` +
