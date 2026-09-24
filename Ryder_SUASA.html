@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20260924-001";
+const VERSION = "20260924-002";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -849,6 +849,7 @@ function discardRestore() {
 
 function resetCourse() {
   const name = document.getElementById('csel').value;
+  if (!name || !COURSES[name]) return;
   localStorage.removeItem('hcp_' + name);
   populateHcpTable();
   const toast = document.getElementById('save-toast');
@@ -859,6 +860,7 @@ function resetCourse() {
 
 function saveCourse() {
   const name = document.getElementById('csel').value;
+  if (!name || !COURSES[name]) return;
   const prevSaved = JSON.parse(localStorage.getItem('hcp_' + name) || 'null');
   const hcps = [];
   const modified = [];
@@ -893,6 +895,7 @@ function saveCourse() {
 function populateHcpTable() {
   const name = document.getElementById('csel').value;
   const data = COURSES[name];
+  if (!data) { document.getElementById('hcp-rows').innerHTML = ''; return; }
   const saved = JSON.parse(localStorage.getItem('hcp_' + name) || 'null');
   const hcpVal = h => (saved && saved[h] != null) ? saved[h] : data[h][1];
   const tbody = document.getElementById('hcp-rows');
@@ -916,13 +919,10 @@ function populateHcpTable() {
   customSaved.forEach(c => { if (!COURSES[c.name]) COURSES[c.name] = c.data; });
 
   const sel = document.getElementById('csel');
-  // Default: Golfers first
   const courseNames = Object.keys(COURSES);
-  const golfersIdx = courseNames.indexOf('Golfers Country Club');
-  if (golfersIdx > 0) {
-    courseNames.splice(golfersIdx, 1);
-    courseNames.unshift('Golfers Country Club');
-  }
+  const oPh = document.createElement('option');
+  oPh.value = ''; oPh.textContent = '— Elegí la cancha —';
+  sel.appendChild(oPh);
   courseNames.forEach(name => {
     const o = document.createElement('option');
     o.value = o.textContent = name;
@@ -934,6 +934,7 @@ function populateHcpTable() {
   const oGest = document.createElement('option');
   oGest.value = '__gestionar__'; oGest.textContent = '🗑 Gestionar canchas…';
   sel.appendChild(oGest);
+  sel.value = '';
 
   populateHcpTable();
   restoreState();
@@ -952,6 +953,7 @@ function startGame() {
     players.push({ ini, hcp });
   }
   const name = document.getElementById('csel').value;
+  if (!name || !COURSES[name]) { alert('Elegí la cancha.'); return; }
   const base = COURSES[name];
   course = base.map(([par], h) => {
     const hv = parseInt(document.getElementById(`hv${h}`).value);
@@ -1549,11 +1551,7 @@ function openNuevaCancha() {
 function cerrarNuevaCancha() {
   document.getElementById('nc-overlay').classList.remove('open');
   const sel = document.getElementById('csel');
-  for (let i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value !== '__nueva__' && sel.options[i].value !== '__gestionar__') {
-      sel.value = sel.options[i].value; break;
-    }
-  }
+  sel.value = '';
   populateHcpTable();
 }
 
@@ -1566,11 +1564,7 @@ function openGestionar() {
 function cerrarGestionar() {
   document.getElementById('gc-overlay').classList.remove('open');
   const sel = document.getElementById('csel');
-  for (let i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value !== '__nueva__' && sel.options[i].value !== '__gestionar__') {
-      sel.value = sel.options[i].value; break;
-    }
-  }
+  sel.value = '';
   populateHcpTable();
 }
 
