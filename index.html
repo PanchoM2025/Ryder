@@ -271,6 +271,14 @@ tr.r-total td.c-player, tr.r-total td.c-team, tr.r-total td.c-match { font-size:
 tr.r-stbl  td.c-player, tr.r-stbl  td.c-team, tr.r-stbl  td.c-match { font-size:19px; }
 tr.r-aag   td.c-player, tr.r-aag   td.c-team, tr.r-aag   td.c-match { font-size:19px; }
 
+/* ── Netos acumulados (filas intercaladas) e Ida/Vuelta neto ── */
+tr.r-acc  td { background:#0a0a20; color:#ffd700; font-size:17px; font-weight:bold; padding:4px 2px; border-bottom:1px solid #333360; }
+tr.r-acc  td.acc-0 { color:#666; font-weight:normal; }
+input.g.bad { outline:2px solid #ff3b30 !important; }
+tr.r-neto td { background:#0a0a20; color:#ffd700; font-weight:bold; border-top:2px solid #ffd700; border-bottom:2px solid #ffd700; }
+tr.r-neto td.c-team, tr.r-neto td.c-match { font-size:19px; }
+tr.r-neto td.acc-0 { color:#666; }
+
 /* score input */
 input.g {
   width:44px; text-align:center; background:#e8e8f5; color:#1a1a3a;
@@ -734,6 +742,13 @@ const COURSES = {
 };
 
 // ── FUNCIONES DE SCORE ────────────────────────────────────────────────────────
+// Score válido: entero 1-15, o 'X' (pickup). Cualquier otra cosa → ''
+function cleanScore(v) {
+  const t = String(v == null ? '' : v).trim();
+  if (/^[xX0]$/.test(t)) return 'X';
+  if (/^[1-9][0-9]?$/.test(t) && parseInt(t, 10) <= 15) return t;
+  return '';
+}
 function strokes(hcp, hcpH) {
   return Math.floor(hcp/18) + (hcp%18 >= hcpH ? 1 : 0);
 }
@@ -833,7 +848,7 @@ function confirmRestore() {
   try { buildRyderMatchSection(); } catch(e) { console.error('confirmRestore buildRyderMatchSection:', e); }
   Object.entries(saved.scores || {}).forEach(([key, val]) => {
     const el = document.getElementById(`g${key}`);
-    if (el) el.value = val;
+    if (el) { el.value = cleanScore(val); el.dataset.prev = el.value; }
   });
   try { recalcAll(); } catch(e) { console.error('confirmRestore recalcAll:', e); }
 }
@@ -1007,7 +1022,7 @@ function finishStartGame() {
   if (_pendingScores !== null) {
     Object.entries(_pendingScores).forEach(([key, val]) => {
       const el = document.getElementById(`g${key}`);
-      if (el) el.value = val;
+      if (el) { el.value = cleanScore(val); el.dataset.prev = el.value; }
     });
     _pendingScores = null;
     recalcAll();
@@ -1060,10 +1075,35 @@ function buildScorecard() {
       const stk = strokesForTeam(p.hcp, hcpH);
       const [ibg,ifg] = strokeBg(stk);
       el.style.background = ibg; el.style.color = ifg;
+      el.dataset.prev = '';
       el.addEventListener('input', function() {
-        if (this.value === '0') this.value = 'X';
-        else if (this.value.toLowerCase() === 'x') this.value = 'X';
+        const raw = this.value;
+        let v;
+        if (/[xX]/.test(raw)) v = 'X';
+        else {
+          const d = raw.replace(/[^0-9]/g, '');
+          if (d === '') v = '';
+          else if (d === '0') v = 'X';
+          else if (/^[1-9][0-9]?$/.test(d) && parseInt(d, 10) <= 15) v = d;
+          else v = this.dataset.prev;          // rechaza: vuelve al valor anterior
+        }
+        if (v !== raw) {
+          this.classList.add('bad');
+          setTimeout(() => this.classList.remove('bad'), 600);
+        }
+        this.value = v;
+        this.dataset.prev = v;
         recalcAll();
+      });
+      // Si sale de la casilla vacía y otro jugador ya cargó ese hoyo → X (pickup)
+      el.addEventListener('blur', function() {
+        if (this.value.trim() !== '') return;
+        const otro = players.some((_, k) => {
+          if (k === j) return false;
+          const o = document.getElementById(`g${k}_${h}`);
+          return o && o.value.trim() !== '';
+        });
+        if (otro) { this.value = 'X'; this.dataset.prev = 'X'; recalcAll(); }
       });
     });
   }
@@ -1130,6 +1170,12 @@ function buildTeamSection() {
       `<td class="c-fix">${h+1}</td><td class="c-fix">${par}</td><td class="c-fix">${hcpH}</td>` +
       `<td class="c-team" id="ta_${h}">·</td><td class="c-team" id="tb_${h}">·</td>`;
     tbody.appendChild(tr);
+    // Fila intercalada: neto acumulado (no va en 9 y 18: se ve en Ida / Vuelta)
+    if (h === 8 || h === 17) return;
+    const tra = document.createElement('tr');
+    tra.className = 'r-acc'; tra.id = `tacc_${h}`; tra.style.display = 'none';
+    tra.innerHTML = `<td colspan="3"></td><td class="c-team" id="taa_${h}"></td><td class="c-team" id="tba_${h}"></td>`;
+    tbody.appendChild(tra);
   }
   function addTeamRow(label, idA, idB, css) {
     const tr = document.createElement('tr'); tr.className = css;
@@ -1138,9 +1184,9 @@ function buildTeamSection() {
     tbody.appendChild(tr);
   }
   for (let h=0; h<9; h++) addHoleRow(h);
-  addTeamRow('Ida',    'ta_f9','tb_f9','r-sub');
+  addTeamRow('Ida',    'ta_f9','tb_f9','r-neto');
   for (let h=9; h<18; h++) addHoleRow(h);
-  addTeamRow('Vuelta', 'ta_b9','tb_b9','r-sub');
+  addTeamRow('Vuelta', 'ta_b9','tb_b9','r-neto');
   addTeamRow('TOTAL',  'ta_tot','tb_tot','r-total');
   addTeamRow('DIFERENCIA','ta_dif','tb_dif','r-diff');
 }
@@ -1169,6 +1215,13 @@ function calcHoleTeam(h) {
   return pts;
 }
 
+// Pinta un par de celdas con el neto: el que va arriba muestra la diferencia, el otro '—'
+function pintaNeto(el, d, cls, ok) {
+  if (!el) return;
+  el.className = cls + (ok && d <= 0 ? ' acc-0' : '');
+  el.textContent = !ok ? '—' : (d > 0 ? d : '—');
+}
+
 function applyTeam(td, p) {
   td.textContent = p===0 ? '0' : p;
   if (p===3) td.className+=' tc-3';
@@ -1179,19 +1232,32 @@ function applyTeam(td, p) {
 
 function recalcTeam() {
   let f9A=0,f9B=0,b9A=0,b9B=0,f9ok=false,b9ok=false;
+  let accA=0, accB=0;
   for (let h=0; h<18; h++) {
+    if (h===9) { accA=0; accB=0; }   // la vuelta acumula independiente
     const pts = calcHoleTeam(h);
+    const trAcc = document.getElementById(`tacc_${h}`);
+    if (trAcc) trAcc.style.display = 'none';
     const tdA=document.getElementById(`ta_${h}`), tdB=document.getElementById(`tb_${h}`);
     if (!tdA||!tdB) continue;
     tdA.className='c-team'; tdB.className='c-team';
     if (!pts) { tdA.textContent='·'; tdB.textContent='·'; continue; }
     applyTeam(tdA,pts[0]); applyTeam(tdB,pts[1]);
+    accA += pts[0]; accB += pts[1];
+    if (trAcc) {
+      pintaNeto(document.getElementById(`taa_${h}`), accA-accB, 'c-team', true);
+      pintaNeto(document.getElementById(`tba_${h}`), accB-accA, 'c-team', true);
+      trAcc.style.display = '';
+    }
     if (h<9) { f9A+=pts[0]; f9B+=pts[1]; f9ok=true; }
     else     { b9A+=pts[0]; b9B+=pts[1]; b9ok=true; }
   }
   const setTd=(id,val)=>{const el=document.getElementById(id);if(el){el.textContent=val;el.className='c-team';}};
-  setTd('ta_f9',f9ok?f9A:'—'); setTd('tb_f9',f9ok?f9B:'—');
-  setTd('ta_b9',b9ok?b9A:'—'); setTd('tb_b9',b9ok?b9B:'—');
+  // Ida / Vuelta: neto acumulado de cada nueve
+  pintaNeto(document.getElementById('ta_f9'), f9A-f9B, 'c-team', f9ok);
+  pintaNeto(document.getElementById('tb_f9'), f9B-f9A, 'c-team', f9ok);
+  pintaNeto(document.getElementById('ta_b9'), b9A-b9B, 'c-team', b9ok);
+  pintaNeto(document.getElementById('tb_b9'), b9B-b9A, 'c-team', b9ok);
   const any=f9ok||b9ok, totA=f9A+b9A, totB=f9B+b9B;
   setTd('ta_tot',any?totA:'—'); setTd('tb_tot',any?totB:'—');
   const dA=document.getElementById('ta_dif'), dB=document.getElementById('tb_dif');
@@ -1253,6 +1319,13 @@ function buildRyderMatchSection() {
     let html = `<td class="c-fix">${h+1}</td><td class="c-fix">${hcpH}</td>`;
     RYDER_ORDER.forEach(j => html += `<td class="c-match" id="rm_${j}_${h}">·</td>`);
     tr.innerHTML = html; tbody.appendChild(tr);
+    // Fila intercalada: neto acumulado de cada match (no va en 9 y 18)
+    if (h === 8 || h === 17) return;
+    const tra = document.createElement('tr');
+    tra.className = 'r-acc'; tra.id = `rmacc_${h}`; tra.style.display = 'none';
+    let ha = '<td colspan="2"></td>';
+    RYDER_ORDER.forEach(j => ha += `<td class="c-match" id="rma_${j}_${h}"></td>`);
+    tra.innerHTML = ha; tbody.appendChild(tra);
   }
   function addRowMatch(label, mkId, css) {
     const tr = document.createElement('tr'); tr.className = css;
@@ -1261,9 +1334,9 @@ function buildRyderMatchSection() {
     tr.innerHTML = html; tbody.appendChild(tr);
   }
   for (let h=0; h<9; h++) addHoleMatch(h);
-  addRowMatch('Ida',        j=>`rmf9_${j}`,  'r-sub');
+  addRowMatch('Ida',        j=>`rmf9_${j}`,  'r-neto');
   for (let h=9; h<18; h++) addHoleMatch(h);
-  addRowMatch('Vuelta',     j=>`rmb9_${j}`,  'r-sub');
+  addRowMatch('Vuelta',     j=>`rmb9_${j}`,  'r-neto');
   addRowMatch('TOTAL',      j=>`rmtot_${j}`, 'r-total');
 
   // Separator row for Match 1 vs Match 2
@@ -1307,8 +1380,10 @@ function recalcRyderMatches() {
   const f9 = {0:0, 1:0, 2:0, 3:0};
   const b9 = {0:0, 1:0, 2:0, 3:0};
   let f9ok=false, b9ok=false;
+  const acc = {0:0, 1:0, 2:0, 3:0};
 
   for (let h=0; h<18; h++) {
+    if (h===9) { acc[0]=acc[1]=acc[2]=acc[3]=0; }   // la vuelta acumula independiente
     const res = calcHoleRyderMatch(h);
     // Pair 1: j0 vs j2
     const setCell = (j, pts, isWin) => {
@@ -1337,6 +1412,22 @@ function recalcRyderMatches() {
     } else {
       [1,3].forEach(j=>{ const td=document.getElementById(`rm_${j}_${h}`); if(td){td.className='c-match';td.textContent='·';} });
     }
+    // Neto acumulado por match
+    const trAcc = document.getElementById(`rmacc_${h}`);
+    if (trAcc) {
+      PAIRS.forEach(([jA,jB], pIdx) => {
+        const r = pIdx===0 ? res.pair1 : res.pair2;
+        const eA = document.getElementById(`rma_${jA}_${h}`), eB = document.getElementById(`rma_${jB}_${h}`);
+        if (!r) { [eA,eB].forEach(e=>{ if(e){ e.className='c-match'; e.textContent=''; } }); return; }
+        acc[jA] += r[0]; acc[jB] += r[1];
+        pintaNeto(eA, acc[jA]-acc[jB], 'c-match', true);
+        pintaNeto(eB, acc[jB]-acc[jA], 'c-match', true);
+      });
+      trAcc.style.display = (res.pair1 || res.pair2) ? '' : 'none';
+    } else {
+      if (res.pair1) { acc[0]+=res.pair1[0]; acc[2]+=res.pair1[1]; }
+      if (res.pair2) { acc[1]+=res.pair2[0]; acc[3]+=res.pair2[1]; }
+    }
   }
 
   const tot = {};
@@ -1344,8 +1435,9 @@ function recalcRyderMatches() {
 
   const setM = (id,val) => { const el=document.getElementById(id); if(el){el.textContent=val;el.className='c-match';} };
   RYDER_ORDER.forEach(j => {
-    setM(`rmf9_${j}`,  f9ok ? (f9[j]||'0') : '—');
-    setM(`rmb9_${j}`,  b9ok ? (b9[j]||'0') : '—');
+    const rival = j===0?2: j===2?0: j===1?3: 1;
+    pintaNeto(document.getElementById(`rmf9_${j}`), f9[j]-f9[rival], 'c-match', f9ok);
+    pintaNeto(document.getElementById(`rmb9_${j}`), b9[j]-b9[rival], 'c-match', b9ok);
     setM(`rmtot_${j}`, (f9ok||b9ok) ? (tot[j]||'0') : '—');
   });
 
