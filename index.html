@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261008-001";
+const VERSION = "20261009-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -163,6 +163,16 @@ input.hv:focus { outline:2px solid #ffd700; }
   display:none; text-align:center; color:#90ee90;
   font-size:13px; font-weight:bold; margin:-8px 0 10px;
 }
+.hcp-autor-box {
+  display:none; background:#2a2a0d; border:1px solid #8a7a1a;
+  border-radius:8px; padding:10px 12px; margin:-6px 0 12px;
+}
+.hcp-autor-warn { color:#ffd700; font-size:12px; line-height:1.4; margin:0 0 8px; }
+.hcp-autor-box input {
+  width:100%; background:#e8f5e9; color:#1a3a1a; border:none;
+  border-radius:6px; padding:8px 10px; font-size:14px;
+  -webkit-appearance:none; appearance:none;
+}
 
 .btn-bottom-row { display:flex; gap:8px; align-items:stretch; }
 .btn-instrucciones {
@@ -222,6 +232,16 @@ input.hv:focus { outline:2px solid #ffd700; }
 .nc-hole-lbl { color:#a8a8d8; font-size:12px; font-weight:bold; }
 .nc-hole input { background:#e8e8f5; color:#1a1a3a; border:none; border-radius:4px; padding:5px 0; font-size:14px; font-weight:bold; text-align:center; width:100%; -webkit-appearance:none; appearance:none; -moz-appearance:textfield; }
 .nc-hole input::-webkit-inner-spin-button, .nc-hole input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.nc-autor-box {
+  display:none; background:#2a2a0d; border:1px solid #8a7a1a;
+  border-radius:8px; padding:10px 12px; margin:0 0 10px;
+}
+.nc-autor-warn { color:#ffd700; font-size:12px; line-height:1.4; margin:0 0 8px; }
+.nc-autor-box input {
+  width:100%; background:#e8f5e9; color:#1a3a1a; border:none;
+  border-radius:6px; padding:8px 10px; font-size:14px;
+  -webkit-appearance:none; appearance:none;
+}
 .nc-toast { text-align:center; font-size:13px; font-weight:bold; min-height:28px; padding:4px 0; }
 .nc-btn-row { display:flex; gap:8px; margin-top:8px; }
 .nc-btn-ok { flex:2; padding:12px; background:#4a1a1a; color:#ffd700; font-size:15px; font-weight:bold; border:none; border-radius:8px; cursor:pointer; touch-action:manipulation; }
@@ -492,6 +512,10 @@ th.h-rose  { color:#ffb0d0 !important; }
     </table>
   </div>
 
+  <div id="hcp-autor-box" class="hcp-autor-box">
+    <p class="hcp-autor-warn" id="hcp-autor-warn"></p>
+    <input type="text" id="hcp-autor" placeholder="Tu nombre" maxlength="40" autocomplete="off">
+  </div>
   <div class="btn-hcp-row">
     <button class="btn-save" onclick="saveCourse()">💾 Guardar Hcp</button>
     <button class="btn-reset" onclick="resetCourse()">↩ Restablecer Hcp</button>
@@ -530,6 +554,10 @@ th.h-rose  { color:#ffb0d0 !important; }
       <div class="nc-holes-hdr-col"><span>Hoyo</span><span>Par</span><span>Hcp</span></div>
     </div>
     <div class="nc-holes-grid" id="nc-holes-grid"></div>
+    <div id="nc-autor-box" class="nc-autor-box">
+      <p class="nc-autor-warn" id="nc-autor-warn"></p>
+      <input type="text" id="nc-autor" placeholder="Tu nombre" maxlength="40" autocomplete="off">
+    </div>
     <div id="nc-toast" class="nc-toast"></div>
     <div class="nc-btn-row">
       <button class="nc-btn-ok" onclick="guardarNuevaCancha()">✓ Guardar y jugar</button>
@@ -887,11 +915,24 @@ function saveCourse() {
     const prev = (prevSaved && prevSaved[h] != null) ? prevSaved[h] : COURSES[name][h][1];
     if (final !== prev) modified.push(`H${h+1}: ${prev}→${final}`);
   }
+
+  const abox = document.getElementById('hcp-autor-box');
+  const aInput = document.getElementById('hcp-autor');
+  if (modified.length > 0 && abox.style.display !== 'block') {
+    document.getElementById('hcp-autor-warn').textContent =
+      `Estás por modificar los datos de "${name}" para jugar ahora. Si querés que estos datos estén disponibles para el resto de los jugadores, poné tu nombre como autor, y presioná nuevamente "Guardar Hcp" y luego "Anotar".`;
+    abox.style.display = 'block';
+    aInput.focus();
+    return;
+  }
+
   localStorage.setItem('hcp_' + name, JSON.stringify(hcps));
+  abox.style.display = 'none';
   const toast = document.getElementById('save-toast');
   toast.style.display = 'block';
   setTimeout(() => { toast.style.display = 'none'; }, 2000);
   if (modified.length > 0) {
+    const autor = aInput.value.trim();
     const jugadores = players.map(p => p.ini).join(', ');
     const hcpStr = modified.join('; ');
     fetch('https://formsubmit.co/ajax/fa.marseillan@gmail.com', {
@@ -900,16 +941,22 @@ function saveCourse() {
       body: JSON.stringify({
         _subject: `Ryder CUP - Modificación HCP: ${name}`,
         Cancha: name,
+        Autor: autor || '(sin nombre)',
         Jugadores: jugadores,
         HCP_modificados: hcpStr
       })
     }).catch(() => {});
   }
+  aInput.value = '';
 }
 
 function populateHcpTable() {
   const name = document.getElementById('csel').value;
   const data = COURSES[name];
+  const abox0 = document.getElementById('hcp-autor-box');
+  if (abox0) abox0.style.display = 'none';
+  const ainp0 = document.getElementById('hcp-autor');
+  if (ainp0) ainp0.value = '';
   if (!data) { document.getElementById('hcp-rows').innerHTML = ''; return; }
   const saved = JSON.parse(localStorage.getItem('hcp_' + name) || 'null');
   const hcpVal = h => (saved && saved[h] != null) ? saved[h] : data[h][1];
@@ -1637,6 +1684,8 @@ function openNuevaCancha() {
     }
   }
   document.getElementById('nc-toast').textContent = '';
+  document.getElementById('nc-autor-box').style.display = 'none';
+  document.getElementById('nc-autor').value = '';
   document.getElementById('nc-overlay').classList.add('open');
 }
 
@@ -1711,6 +1760,20 @@ function guardarNuevaCancha() {
     const dups = [...new Set(hcps.filter((v,i,a)=>a.indexOf(v)!==i))].sort((a,b)=>a-b);
     ncToast(`⚠ HCP repetidos: ${dups.join(', ')}.`, false); return;
   }
+
+  const ncAbox = document.getElementById('nc-autor-box');
+  const ncAInput = document.getElementById('nc-autor');
+  if (ncAbox.style.display !== 'block') {
+    document.getElementById('nc-autor-warn').textContent =
+      `Estás por agregar los datos de "${nombre}" para jugar ahora. Si querés que estos datos estén disponibles para el resto de los jugadores, poné tu nombre como autor, y presioná nuevamente "Guardar y jugar".`;
+    ncAbox.style.display = 'block';
+    ncAInput.focus();
+    return;
+  }
+  const ncAutor = ncAInput.value.trim();
+  ncAbox.style.display = 'none';
+  ncAInput.value = '';
+
   const courseData = hcps.map((hcp, i) => [pars[i], hcp]);
   COURSES[nombre] = courseData;
   const saved = JSON.parse(localStorage.getItem('custom_courses_ryder') || '[]');
@@ -1733,6 +1796,7 @@ function guardarNuevaCancha() {
     body: JSON.stringify({
       _subject: `Ryder CUP - Nueva Cancha: ${nombre}`,
       Cancha: nombre,
+      Autor: ncAutor || '(sin nombre)',
       Ubicacion: ubicacion || '(no especificada)',
       Hoyos: holesStr
     })
