@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261009-001";
+const VERSION = "20261014-003";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -771,6 +771,15 @@ const COURSES = {
 
 // ── FUNCIONES DE SCORE ────────────────────────────────────────────────────────
 // Score válido: entero 1-15, o 'X' (pickup). Cualquier otra cosa → ''
+// Escapa texto ingresado por el usuario antes de meterlo en innerHTML
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+// Nombre de cancha a partir del título guardado ("<cancha> — Ryder CUP")
+function courseKeyFromTitle(t) {
+  return String(t || '').replace(/\s*—\s*Ryder CUP\s*$/, '').trim();
+}
 function cleanScore(v) {
   const t = String(v == null ? '' : v).trim();
   if (/^[xX0]$/.test(t)) return 'X';
@@ -823,6 +832,7 @@ function saveState() {
   });
   try { localStorage.setItem(STATE_KEY, JSON.stringify({
     courseName: document.getElementById('sc-title').textContent,
+    courseKey: _tmpCourseName,
     players, course, scores, gameMode, hcpMode
   })); } catch(e) {}
 }
@@ -842,10 +852,10 @@ function restoreState() {
       const cls = i < 2 ? 'rp-tinto' : 'rp-rose';
       const emoji = i < 2 ? '🍷' : '🌸';
       const pos = ['J1','J2','J3','J4'][i];
-      return `<div class="rp-row"><span class="rp-name ${cls}">${emoji} ${pos} · ${p.ini}</span><span class="rp-hcp">HCP ${p.hcp}</span></div>`;
+      return `<div class="rp-row"><span class="rp-name ${cls}">${emoji} ${pos} · ${escHtml(p.ini)}</span><span class="rp-hcp">HCP ${escHtml(p.hcp)}</span></div>`;
     }).join('');
-    const cancha = (saved.courseName || '').replace(/\s*—.*$/, '').trim();
-    list.innerHTML = `<div style="color:#a8a8d8;font-size:11px;margin-bottom:6px;">${cancha}</div>` + rows;
+    const cancha = saved.courseKey || courseKeyFromTitle(saved.courseName);
+    list.innerHTML = `<div style="color:#a8a8d8;font-size:11px;margin-bottom:6px;">${escHtml(cancha)}</div>` + rows;
   }
   document.getElementById('modal-restore').classList.add('open');
   return true;
@@ -860,7 +870,8 @@ function confirmRestore() {
   players  = saved.players;
   gameMode = saved.gameMode || '1y2';
   hcpMode  = saved.hcpMode  || 'completo';
-  const courseKey = (saved.courseName || '').replace(/\s*[-—–].*$/, '').trim();
+  const courseKey = saved.courseKey || courseKeyFromTitle(saved.courseName);
+  _tmpCourseName = courseKey;
   if (courseKey && COURSES[courseKey]) {
     const base = COURSES[courseKey];
     const savedHcps = JSON.parse(localStorage.getItem('hcp_' + courseKey) || 'null');
@@ -1102,7 +1113,7 @@ function buildScorecard() {
   const playerColors = ['h-tinto','h-tinto','h-rose','h-rose'];
   let th = '<tr><th class="c-fix">H</th><th class="c-fix">Par</th><th class="c-fix">HCP</th>';
   players.forEach((p, j) => {
-    th += `<th class="c-player ${playerColors[j]}">${p.ini}<br><span style="color:#ffd700;font-size:10px">HCP ${p.hcp}</span></th>`;
+    th += `<th class="c-player ${playerColors[j]}">${escHtml(p.ini)}<br><span style="color:#ffd700;font-size:10px">HCP ${p.hcp}</span></th>`;
   });
   th += '</tr>';
   thead.innerHTML = th; tbl.appendChild(thead);
@@ -1119,7 +1130,7 @@ function buildScorecard() {
     tr.innerHTML = html; tbody.appendChild(tr);
     players.forEach((p,j) => {
       const el = document.getElementById(`g${j}_${h}`);
-      const stk = strokesForTeam(p.hcp, hcpH);
+      const stk = strokes(p.hcp, hcpH);   // colores con HCP al 100%
       const [ibg,ifg] = strokeBg(stk);
       el.style.background = ibg; el.style.color = ifg;
       el.dataset.prev = '';
@@ -1190,6 +1201,7 @@ function buildTeamSection() {
     elLegend.textContent = gameMode === '1y2'
       ? `1º neto único = 2 pts · 2º neto único = 1 pt · Empate = 0 pts | ${hcpLabel}`
       : `Mejor pelota gana = 1 pt · Empate = 0 pts | ${hcpLabel}`;
+    elLegend.textContent += ' · Se define cuando un equipo ya no puede ser alcanzado';
   }
   document.getElementById('team-sub').textContent =
     `🍷 Tinto: ${players[0].ini}(${effHcps[0]}) / ${players[1].ini}(${effHcps[1]})` +
@@ -1202,9 +1214,9 @@ function buildTeamSection() {
     `<tr>
       <th class="c-fix">H</th><th class="c-fix">Par</th><th class="c-fix">HCP</th>
       <th class="c-team h-tinto">🍷 Tinto<br>
-        <span style="color:#ffb0b0;font-size:10px">${players[0].ini}(${effHcps[0]}) / ${players[1].ini}(${effHcps[1]})</span></th>
+        <span style="color:#ffb0b0;font-size:10px">${escHtml(players[0].ini)}(${effHcps[0]}) / ${escHtml(players[1].ini)}(${effHcps[1]})</span></th>
       <th class="c-team h-rose">🌸 Rosé<br>
-        <span style="color:#ffb0d0;font-size:10px">${players[2].ini}(${effHcps[2]}) / ${players[3].ini}(${effHcps[3]})</span></th>
+        <span style="color:#ffb0d0;font-size:10px">${escHtml(players[2].ini)}(${effHcps[2]}) / ${escHtml(players[3].ini)}(${effHcps[3]})</span></th>
     </tr>`;
   tbl.appendChild(thead);
   const tbody = document.createElement('tbody'); tbl.appendChild(tbody);
@@ -1235,7 +1247,10 @@ function buildTeamSection() {
   for (let h=9; h<18; h++) addHoleRow(h);
   addTeamRow('Vuelta', 'ta_b9','tb_b9','r-neto');
   addTeamRow('TOTAL',  'ta_tot','tb_tot','r-total');
-  addTeamRow('DIFERENCIA','ta_dif','tb_dif','r-diff');
+  // Tres resultados, igual que el 4-2-0: Ida, Vuelta y Match (ida + vuelta)
+  addTeamRow('Dif. Ida',    'ta_dF', 'tb_dF', 'r-diff');
+  addTeamRow('Dif. Vuelta', 'ta_dB', 'tb_dB', 'r-sub');
+  addTeamRow('Dif. Match',  'ta_dif','tb_dif','r-sub');
 }
 
 function calcHoleTeam(h) {
@@ -1280,9 +1295,17 @@ function applyTeam(td, p) {
 function recalcTeam() {
   let f9A=0,f9B=0,b9A=0,b9B=0,f9ok=false,b9ok=false;
   let accA=0, accB=0;
+  // Fourball definido: la ventaja supera lo máximo que se puede sumar en los hoyos que faltan.
+  // Se siguen cargando y mostrando todos los hoyos; solo se marca en qué hoyo quedó definido.
+  const maxPorHoyo = gameMode === '1y2' ? 3 : 1;
+  let jugados = 0, sumA = 0, sumB = 0, definidoEn = null;
   for (let h=0; h<18; h++) {
     if (h===9) { accA=0; accB=0; }   // la vuelta acumula independiente
     const pts = calcHoleTeam(h);
+    if (pts) {
+      jugados++; sumA += pts[0]; sumB += pts[1];
+      if (definidoEn === null && Math.abs(sumA-sumB) > maxPorHoyo * (18 - jugados)) definidoEn = h;
+    }
     const trAcc = document.getElementById(`tacc_${h}`);
     if (trAcc) trAcc.style.display = 'none';
     const tdA=document.getElementById(`ta_${h}`), tdB=document.getElementById(`tb_${h}`);
@@ -1307,15 +1330,29 @@ function recalcTeam() {
   pintaNeto(document.getElementById('tb_b9'), b9B-b9A, 'c-team', b9ok);
   const any=f9ok||b9ok, totA=f9A+b9A, totB=f9B+b9B;
   setTd('ta_tot',any?totA:'—'); setTd('tb_tot',any?totB:'—');
+  const pintaDif = (idA, idB, a, b, ok) => {
+    const dA=document.getElementById(idA), dB=document.getElementById(idB);
+    if (!dA||!dB) return;
+    dA.className='c-team'; dB.className='c-team';
+    if (!ok) { dA.textContent='—'; dB.textContent='—'; }
+    else if (a===b) { dA.textContent='EMPATE'; dB.textContent='EMPATE'; }
+    else if (a>b) {
+      dA.textContent=`+${a-b}`; dA.className+=' tc-2'; dB.textContent='—';
+    } else {
+      dA.textContent='—'; dB.textContent=`+${b-a}`; dB.className+=' tc-2';
+    }
+  };
+  pintaDif('ta_dF', 'tb_dF',  f9A,  f9B,  f9ok);
+  pintaDif('ta_dB', 'tb_dB',  b9A,  b9B,  b9ok);
+  pintaDif('ta_dif','tb_dif', totA, totB, any);
   const dA=document.getElementById('ta_dif'), dB=document.getElementById('tb_dif');
-  if (!dA||!dB) return;
-  dA.className='c-team'; dB.className='c-team';
-  if (!any) { dA.textContent='—'; dB.textContent='—'; }
-  else if (totA===totB) { dA.textContent='EMPATE'; dB.textContent='EMPATE'; }
-  else if (totA>totB) {
-    dA.textContent=`+${totA-totB}`; dA.className+=' tc-2'; dB.textContent='—';
-  } else {
-    dA.textContent='—'; dB.textContent=`+${totB-totA}`; dB.className+=' tc-2';
+  // Definido antes del 18: indicarlo debajo de la diferencia del match del ganador
+  if (dA && dB && definidoEn !== null && definidoEn < 17 && totA !== totB) {
+    const elW = totA > totB ? dA : dB;
+    const nota = document.createElement('div');
+    nota.style.cssText = 'font-size:10px;font-weight:normal';
+    nota.textContent = `definido H${definidoEn+1}`;
+    elW.appendChild(nota);
   }
   // Convert fourball hole-point totals → match-level points (2/1/0)
   let tintoTotal = 0, roseTotal = 0;
@@ -1338,7 +1375,8 @@ function buildRyderMatchSection() {
   const effHcps = players.map(p => effectiveTeamHcp(p.hcp));
   const hcpLabel = hcpMode === 'cero' ? 'Baja a cero · 85% dif.' : 'HCP 85%';
   document.getElementById('legend-ryder-match').textContent =
-    `Menor neto gana el hoyo = 1 pt · Empate = 0 pts | ${hcpLabel}`;
+    `Menor neto gana el hoyo = 1 pt · Empate = 0 pts | ${hcpLabel} · ` +
+    `El match termina cuando un jugador gana más hoyos de los que faltan`;
   document.getElementById('sub-ryder-match').textContent =
     `⚔️ ${players[0].ini}🍷(${effHcps[0]}) vs ${players[2].ini}🌸(${effHcps[2]})` +
     `   ·   ` +
@@ -1353,7 +1391,7 @@ function buildRyderMatchSection() {
   RYDER_ORDER.forEach((j, ci) => {
     const label = j===0?'J1':j===1?'J2':j===2?'J3':'J4';
     const emoji = (j===0||j===1) ? '🍷' : '🌸';
-    th += `<th class="c-match ${colColors[ci]}">${emoji}${players[j].ini}<br><span style="color:#ffd700;font-size:10px">HCP ${effHcps[j]}</span></th>`;
+    th += `<th class="c-match ${colColors[ci]}">${emoji}${escHtml(players[j].ini)}<br><span style="color:#ffd700;font-size:10px">HCP ${effHcps[j]}</span></th>`;
   });
   th += '</tr>';
   thead.innerHTML = th; tbl.appendChild(thead);
@@ -1429,56 +1467,52 @@ function recalcRyderMatches() {
   let f9ok=false, b9ok=false;
   const acc = {0:0, 1:0, 2:0, 3:0};
 
+  // Estado de cada match: hoyos ganados [jA, jB], hoyos jugados y si ya quedó definido
+  // (un jugador ganó más hoyos de los que faltan → los hoyos siguientes no cuentan)
+  const st = PAIRS.map(() => ({ won:[0,0], played:0, closed:null }));
+
+  const setCell = (j, h, txt, cls) => {
+    const td = document.getElementById(`rm_${j}_${h}`);
+    if (!td) return;
+    td.className = 'c-match' + (cls ? ' ' + cls : '');
+    td.textContent = txt;
+  };
+
   for (let h=0; h<18; h++) {
     if (h===9) { acc[0]=acc[1]=acc[2]=acc[3]=0; }   // la vuelta acumula independiente
     const res = calcHoleRyderMatch(h);
-    // Pair 1: j0 vs j2
-    const setCell = (j, pts, isWin) => {
-      const td = document.getElementById(`rm_${j}_${h}`);
-      if (!td) return;
-      td.className='c-match';
-      if (pts===1)        { td.textContent='1'; td.className+=' mc-win'; }
-      else if (isWin===0) { td.textContent='='; td.className+=' mc-tie'; }
-      else                { td.textContent='—'; td.className+=' mc-lose'; }
-    };
-    if (res.pair1) {
-      const [p0, p2] = res.pair1;
-      setCell(0, p0, p0===p2?0:null);
-      setCell(2, p2, p0===p2?0:null);
-      if (h<9) { f9[0]+=p0; f9[2]+=p2; f9ok=true; }
-      else     { b9[0]+=p0; b9[2]+=p2; b9ok=true; }
-    } else {
-      [0,2].forEach(j=>{ const td=document.getElementById(`rm_${j}_${h}`); if(td){td.className='c-match';td.textContent='·';} });
-    }
-    if (res.pair2) {
-      const [p1, p3] = res.pair2;
-      setCell(1, p1, p1===p3?0:null);
-      setCell(3, p3, p1===p3?0:null);
-      if (h<9) { f9[1]+=p1; f9[3]+=p3; f9ok=true; }
-      else     { b9[1]+=p1; b9[3]+=p3; b9ok=true; }
-    } else {
-      [1,3].forEach(j=>{ const td=document.getElementById(`rm_${j}_${h}`); if(td){td.className='c-match';td.textContent='·';} });
-    }
-    // Neto acumulado por match
     const trAcc = document.getElementById(`rmacc_${h}`);
-    if (trAcc) {
-      PAIRS.forEach(([jA,jB], pIdx) => {
-        const r = pIdx===0 ? res.pair1 : res.pair2;
-        const eA = document.getElementById(`rma_${jA}_${h}`), eB = document.getElementById(`rma_${jB}_${h}`);
-        if (!r) { [eA,eB].forEach(e=>{ if(e){ e.className='c-match'; e.textContent=''; } }); return; }
-        acc[jA] += r[0]; acc[jB] += r[1];
+    let anyAcc = false;
+    PAIRS.forEach(([jA,jB], pIdx) => {
+      const r = pIdx===0 ? res.pair1 : res.pair2;
+      const s = st[pIdx];
+      const eA = document.getElementById(`rma_${jA}_${h}`), eB = document.getElementById(`rma_${jB}_${h}`);
+      if (!r || s.closed) {
+        setCell(jA, h, '·'); setCell(jB, h, '·');
+        [eA,eB].forEach(e=>{ if(e){ e.className='c-match'; e.textContent=''; } });
+        return;
+      }
+      if (r[0]===r[1])     { setCell(jA, h, '=', 'mc-tie');  setCell(jB, h, '=', 'mc-tie'); }
+      else if (r[0]===1)   { setCell(jA, h, '1', 'mc-win');  setCell(jB, h, '—', 'mc-lose'); }
+      else                 { setCell(jA, h, '—', 'mc-lose'); setCell(jB, h, '1', 'mc-win'); }
+      s.won[0] += r[0]; s.won[1] += r[1]; s.played++;
+      if (h<9) { f9[jA]+=r[0]; f9[jB]+=r[1]; f9ok=true; }
+      else     { b9[jA]+=r[0]; b9[jB]+=r[1]; b9ok=true; }
+      // Neto acumulado por match
+      acc[jA] += r[0]; acc[jB] += r[1];
+      if (trAcc) {
         pintaNeto(eA, acc[jA]-acc[jB], 'c-match', true);
         pintaNeto(eB, acc[jB]-acc[jA], 'c-match', true);
-      });
-      trAcc.style.display = (res.pair1 || res.pair2) ? '' : 'none';
-    } else {
-      if (res.pair1) { acc[0]+=res.pair1[0]; acc[2]+=res.pair1[1]; }
-      if (res.pair2) { acc[1]+=res.pair2[0]; acc[3]+=res.pair2[1]; }
-    }
+        anyAcc = true;
+      }
+      const dif = Math.abs(s.won[0]-s.won[1]), quedan = 18 - s.played;
+      if (dif > quedan) s.closed = { dif, quedan };
+    });
+    if (trAcc) trAcc.style.display = anyAcc ? '' : 'none';
   }
 
   const tot = {};
-  RYDER_ORDER.forEach(j => tot[j] = f9[j] + b9[j]);
+  PAIRS.forEach(([jA,jB], pIdx) => { tot[jA] = st[pIdx].won[0]; tot[jB] = st[pIdx].won[1]; });
 
   const setM = (id,val) => { const el=document.getElementById(id); if(el){el.textContent=val;el.className='c-match';} };
   RYDER_ORDER.forEach(j => {
@@ -1488,33 +1522,29 @@ function recalcRyderMatches() {
     setM(`rmtot_${j}`, (f9ok||b9ok) ? (tot[j]||'0') : '—');
   });
 
-  // Diferencia per pair
-  const showDif = f9ok || b9ok;
-  const applyDif = (jA, jB) => {
+  // Diferencia por match: "3&2" si se definió antes del 18, "+N" si no
+  const applyDif = ([jA, jB], s) => {
     const elA=document.getElementById(`rmdif_${jA}`), elB=document.getElementById(`rmdif_${jB}`);
     if (!elA||!elB) return;
     elA.className='c-match'; elB.className='c-match';
-    if (!showDif) { elA.textContent='—'; elB.textContent='—'; return; }
-    const tA=tot[jA], tB=tot[jB];
+    if (!s.played) { elA.textContent='—'; elB.textContent='—'; return; }
+    const tA=s.won[0], tB=s.won[1];
+    const txt = (s.closed && s.closed.quedan > 0) ? `${s.closed.dif}&${s.closed.quedan}` : `+${Math.abs(tA-tB)}`;
     if (tA===tB) { elA.textContent='='; elB.textContent='='; }
-    else if (tA>tB) { elA.textContent=`+${tA-tB}`; elA.className+=' mc-win'; elB.textContent='—'; }
-    else            { elA.textContent='—'; elB.textContent=`+${tB-tA}`; elB.className+=' mc-win'; }
+    else if (tA>tB) { elA.textContent=txt; elA.className+=' mc-win'; elB.textContent='—'; }
+    else            { elA.textContent='—'; elB.textContent=txt; elB.className+=' mc-win'; }
   };
-  applyDif(0, 2); // Match 1
-  applyDif(1, 3); // Match 2
+  PAIRS.forEach((pair, pIdx) => applyDif(pair, st[pIdx]));
 
-  // Convert holes-won totals → match-level points (1/0.5/0 per individual match)
+  // Hoyos ganados → puntos del match (1 / ½ / 0). PAIRS: jA siempre es Tinto, jB Rosé
   let tintoMatch = 0, roseMatch = 0;
-  if (showDif) {
-    // Match 1: J0 (Tinto) vs J2 (Rosé)
-    if      (tot[0] > tot[2]) { tintoMatch += 1; }
-    else if (tot[2] > tot[0]) { roseMatch  += 1; }
-    else                      { tintoMatch += 0.5; roseMatch += 0.5; }
-    // Match 2: J1 (Tinto) vs J3 (Rosé)
-    if      (tot[1] > tot[3]) { tintoMatch += 1; }
-    else if (tot[3] > tot[1]) { roseMatch  += 1; }
-    else                      { tintoMatch += 0.5; roseMatch += 0.5; }
-  }
+  const showDif = st.some(s => s.played > 0);
+  st.forEach(s => {
+    if (!s.played) return;
+    if      (s.won[0] > s.won[1]) { tintoMatch += 1; }
+    else if (s.won[1] > s.won[0]) { roseMatch  += 1; }
+    else                          { tintoMatch += 0.5; roseMatch += 0.5; }
+  });
   return { tintoMatch, roseMatch, hasData: showDif };
 }
 
@@ -1567,7 +1597,7 @@ function recalcAll() {
       const isPickup = (raw === 'X');
       const g = parseInt(raw);
       if (!isPickup && (raw===''||isNaN(g)||g<=0)) {
-        if(el){ const [ibg,ifg]=strokeBg(strokesForTeam(p.hcp,course[h][1])); el.style.background=ibg; el.style.color=ifg; }
+        if(el){ const [ibg,ifg]=strokeBg(strokes(p.hcp,course[h][1])); el.style.background=ibg; el.style.color=ifg; }
         continue;
       }
       const [par,hcpH] = course[h];
@@ -1718,7 +1748,7 @@ function renderGcLista() {
   }
   lista.innerHTML = saved.map((c, i) =>
     `<div class="gc-item">
-      <span class="gc-item-name">${c.name}</span>
+      <span class="gc-item-name">${escHtml(c.name)}</span>
       <button class="gc-btn-del" onclick="gcBorrar(${i})">✕ Borrar</button>
     </div>`
   ).join('');
@@ -1731,7 +1761,7 @@ function gcBorrar(i) {
   localStorage.setItem('custom_courses_ryder', JSON.stringify(saved));
   delete COURSES[nombre];
   const sel = document.getElementById('csel');
-  const opt = sel.querySelector(`option[value="${nombre}"]`);
+  const opt = Array.from(sel.options).find(o => o.value === nombre);
   if (opt) sel.removeChild(opt);
   document.getElementById('gc-msg').textContent = `✅ "${nombre}" borrada.`;
   renderGcLista();
@@ -1782,7 +1812,7 @@ function guardarNuevaCancha() {
   if (idx >= 0) saved[idx] = entry; else saved.push(entry);
   localStorage.setItem('custom_courses_ryder', JSON.stringify(saved));
   const sel = document.getElementById('csel');
-  if (!sel.querySelector(`option[value="${nombre}"]`)) {
+  if (!Array.from(sel.options).some(o => o.value === nombre)) {
     const opt = document.createElement('option');
     opt.value = opt.textContent = nombre;
     sel.insertBefore(opt, sel.querySelector('option[value="__nueva__"]'));
