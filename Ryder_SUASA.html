@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261016-001";
+const VERSION = "20261016-002";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -1250,6 +1250,7 @@ function buildTeamSection() {
   addTeamRow('Vuelta', 'ta_b9','tb_b9','r-neto');
   addTeamRow('Neto Vuelta', 'ta_nb9','tb_nb9','r-nsum');
   addTeamRow('TOTAL',  'ta_tot','tb_tot','r-total');
+  addTeamRow('Neto Total',  'ta_ntot','tb_ntot','r-nsum');
   // Tres resultados, igual que el 4-2-0: Ida, Vuelta y Match (ida + vuelta)
   addTeamRow('Dif. Ida',    'ta_dF', 'tb_dF', 'r-diff');
   addTeamRow('Dif. Vuelta', 'ta_dB', 'tb_dB', 'r-sub');
@@ -1365,7 +1366,7 @@ function recalcTeam() {
     if (pickup) return s > 0 ? s + '*' : 'X';
     return s;
   };
-  [['nf9',0,9],['nb9',9,18]].forEach(([k,from,to]) => {
+  [['nf9',0,9],['nb9',9,18],['ntot',0,18]].forEach(([k,from,to]) => {
     const sums = [0,1,2,3].map(j => netoSum(j, from, to));
     setTd(`ta_${k}`, `${sums[0]} · ${sums[1]}`);
     setTd(`tb_${k}`, `${sums[2]} · ${sums[3]}`);
