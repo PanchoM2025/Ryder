@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261016-002";
+const VERSION = "20261024-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -817,9 +817,10 @@ let hcpMode  = 'completo';
 let _tmpCourseName = '';
 const STATE_KEY = 'ryder_suasa_v1';
 
-let _pendingScores = null;
+let _pendingScores = null;   // [{ini, scores:{hoyo: valor}}] capturado al presionar Regresar
 let _savedGameMode = null;
 let _savedHcpMode  = null;
+let _savedCourseKey = null;  // cancha de la partida al presionar Regresar
 
 // ── PERSISTENCIA ──────────────────────────────────────────────────────────────
 function saveState() {
@@ -873,13 +874,15 @@ function confirmRestore() {
   hcpMode  = saved.hcpMode  || 'completo';
   const courseKey = saved.courseKey || courseKeyFromTitle(saved.courseName);
   _tmpCourseName = courseKey;
-  if (courseKey && COURSES[courseKey]) {
-    const base = COURSES[courseKey];
-    const savedHcps = JSON.parse(localStorage.getItem('hcp_' + courseKey) || 'null');
-    course = base.map(([par], h) => [par, (savedHcps && savedHcps[h] != null) ? savedHcps[h] : base[h][1]]);
-  } else {
+  // Se usan los hoyos con los que se jugó la partida (no los HCP guardados de la cancha)
+  if (Array.isArray(saved.course) && saved.course.length === 18) {
     course = saved.course;
+  } else if (courseKey && COURSES[courseKey]) {
+    course = COURSES[courseKey].map(([par, hcpH]) => [par, hcpH]);
+  } else {
+    return;
   }
+  fillSetupFromGame();
   document.getElementById('sc-title').textContent = saved.courseName || '';
   document.getElementById('setup').style.display = 'none';
   document.getElementById('scorecard').style.display = 'block';
@@ -891,6 +894,29 @@ function confirmRestore() {
     if (el) { el.value = cleanScore(val); el.dataset.prev = el.value; }
   });
   try { recalcAll(); } catch(e) { console.error('confirmRestore recalcAll:', e); }
+}
+
+// Completa la 1° pantalla con los jugadores, la cancha y los HCP de hoyos de la partida
+// en curso, para que "Regresar" + "Anotar" la retome igual.
+function fillSetupFromGame() {
+  for (let i = 0; i < 4; i++) {
+    const p = players[i];
+    const ini = document.getElementById(`ini${i}`);
+    const hcp = document.getElementById(`hcp${i}`);
+    if (ini) ini.value = p ? p.ini : '';
+    if (hcp) hcp.value = p ? p.hcp : '';
+  }
+  const sel = document.getElementById('csel');
+  const existe = _tmpCourseName && COURSES[_tmpCourseName] &&
+    Array.from(sel.options || []).some(o => o.value === _tmpCourseName);
+  sel.value = existe ? _tmpCourseName : '';
+  populateHcpTable();
+  if (sel.value) {
+    for (let h = 0; h < 18; h++) {
+      const el = document.getElementById(`hv${h}`);
+      if (el && course[h]) el.value = course[h][1];
+    }
+  }
 }
 
 function discardRestore() {
@@ -1035,6 +1061,17 @@ function startGame() {
   });
   _tmpCourseName = name;
   if (_pendingScores !== null) {
+    // Si cambió la cancha o son todos jugadores nuevos, preguntar si se conservan los scores
+    const hayScores = _pendingScores.some(e => Object.keys(e.scores).length > 0);
+    const cambioCancha = name !== _savedCourseKey;
+    const algunoIgual = players.some(p => _pendingScores.some(e => e.ini === p.ini));
+    if (hayScores && (cambioCancha || !algunoIgual)) {
+      if (!confirm('Cambiaste la cancha o los jugadores.\n¿Querés conservar los scores que ya estaban cargados?\n\nAceptar = conservar · Cancelar = tarjeta vacía')) {
+        _pendingScores = null;
+      }
+    }
+  }
+  if (_pendingScores !== null) {
     gameMode = _savedGameMode || '1y2';
     hcpMode  = _savedHcpMode  || 'completo';
     finishStartGame();
@@ -1079,9 +1116,22 @@ function finishStartGame() {
     buildRyderMatchSection();
   } catch(e) { console.error('buildRyderMatchSection:', e); }
   if (_pendingScores !== null) {
-    Object.entries(_pendingScores).forEach(([key, val]) => {
-      const el = document.getElementById(`g${key}`);
-      if (el) { el.value = cleanScore(val); el.dataset.prev = el.value; }
+    // Cada jugador recupera sus scores por iniciales; si cambió las iniciales, por posición
+    const used = new Set();
+    const pick = (j) => {
+      let k = _pendingScores.findIndex((e, i) => !used.has(i) && e.ini === players[j].ini);
+      if (k < 0 && _pendingScores[j] && !used.has(j)
+          && !players.some(p => p.ini === _pendingScores[j].ini)) k = j;
+      if (k >= 0) used.add(k);
+      return k;
+    };
+    players.forEach((_, j) => {
+      const k = pick(j);
+      if (k < 0) return;
+      Object.entries(_pendingScores[k].scores).forEach(([h, val]) => {
+        const el = document.getElementById(`g${j}_${h}`);
+        if (el) { el.value = cleanScore(val); el.dataset.prev = el.value; }
+      });
     });
     _pendingScores = null;
     recalcAll();
@@ -1978,15 +2028,18 @@ function shareCard() {
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────────────────────
 function goBack() {
-  _pendingScores = {};
-  players.forEach((p, j) => {
+  // Captura scores actuales de cada jugador para restaurarlos después de "Anotar"
+  _pendingScores = players.map((p, j) => {
+    const scores = {};
     for (let h = 0; h < 18; h++) {
       const el = document.getElementById(`g${j}_${h}`);
-      if (el && el.value.trim() !== '') _pendingScores[`${j}_${h}`] = el.value.trim();
+      if (el && el.value.trim() !== '') scores[h] = el.value.trim();
     }
+    return { ini: p.ini, scores };
   });
   _savedGameMode = gameMode;
   _savedHcpMode  = hcpMode;
+  _savedCourseKey = _tmpCourseName;
   document.getElementById('scorecard').style.display = 'none';
   document.getElementById('setup').style.display = 'block';
   window.scrollTo(0, 0);
@@ -1994,6 +2047,7 @@ function goBack() {
 
 function newGame() {
   _pendingScores = null;
+  _savedCourseKey = null;
   _savedGameMode = null;
   _savedHcpMode  = null;
   try { localStorage.removeItem(STATE_KEY); } catch(e) {}
