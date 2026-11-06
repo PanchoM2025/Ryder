@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261106-001";
+const VERSION = "20261107-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -453,9 +453,9 @@ th.h-rose  { color:#ffb0d0 !important; }
 <div id="setup">
   <div id="ios-warn">
     <b>📱 iPhone: para no perder la partida</b><br>
-    Abrí la app siempre desde el <b>ícono en la pantalla de inicio</b>.<br>
-    Si no lo tenés: en Safari tocá <b>Compartir ⬆</b> → <b>Agregar a inicio</b>.<br>
-    Si la abrís desde WhatsApp, desde otro navegador o en <b>navegación privada</b>, el iPhone guarda la partida en otro lado y al volver a abrirla no aparece.
+    Abrí la app siempre <b>en el mismo navegador</b>: si empezás en Chrome, seguí en Chrome; si empezás en Safari, seguí en Safari. <b>No uses navegación privada ni incógnito.</b><br>
+    Si tocás un link en WhatsApp puede abrirse en otro lado: mejor guardala en favoritos y entrá siempre por ahí.<br>
+    Lo más seguro: instalarla en la pantalla de inicio (en Safari: <b>Compartir ⬆</b> → <b>Agregar a inicio</b>) y abrirla siempre desde el ícono.
     <button onclick="closeIosWarn()">Entendido</button>
   </div>
   <div class="ryder-title">
