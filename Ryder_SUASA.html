@@ -16,11 +16,11 @@
 <meta name="apple-mobile-web-app-title" content="Ryder CUP">
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/SUASA/sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261024-001";
+const VERSION = "20261106-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -396,6 +396,17 @@ td.mc-lose { color:#555 !important; }
 th.h-tinto { color:#ff9999 !important; }
 th.h-rose  { color:#ffb0d0 !important; }
 
+/* ── AVISO IPHONE ── */
+#ios-warn {
+  display:none; background:#5a3a00; border:2px solid #ffd700; border-radius:10px;
+  color:#fff; font-size:13px; line-height:1.4; padding:12px 14px; margin:0 0 16px; text-align:left;
+}
+#ios-warn b { color:#ffd700; }
+#ios-warn button {
+  margin-top:10px; width:100%; padding:8px; border:none; border-radius:8px;
+  background:#ffd700; color:#1a3a1a; font-weight:bold; font-size:14px;
+}
+
 /* ── MODAL RESTAURAR ── */
 #modal-restore {
   display:none; position:fixed; inset:0; z-index:1100;
@@ -440,6 +451,13 @@ th.h-rose  { color:#ffb0d0 !important; }
 
 <!-- ── SETUP ── -->
 <div id="setup">
+  <div id="ios-warn">
+    <b>📱 iPhone: para no perder la partida</b><br>
+    Abrí la app siempre desde el <b>ícono en la pantalla de inicio</b>.<br>
+    Si no lo tenés: en Safari tocá <b>Compartir ⬆</b> → <b>Agregar a inicio</b>.<br>
+    Si la abrís desde WhatsApp, desde otro navegador o en <b>navegación privada</b>, el iPhone guarda la partida en otro lado y al volver a abrirla no aparece.
+    <button onclick="closeIosWarn()">Entendido</button>
+  </div>
   <div class="ryder-title">
     <div class="ryder-cups">🍷🌸</div>
     <h1>SUASA Ryder CUP</h1>
@@ -1038,7 +1056,41 @@ function populateHcpTable() {
 
   populateHcpTable();
   restoreState();
+  setupStorageSafety();
 })();
+
+// ── Protección del guardado (sobre todo iPhone) ─────────────────────────────
+// En iPhone cada lugar desde donde se abre la app (ícono de inicio, Safari,
+// navegador de WhatsApp, navegación privada) guarda la partida por separado.
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isStandaloneApp() {
+  return window.navigator.standalone === true ||
+         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+
+function setupStorageSafety() {
+  // Pedir que el teléfono no borre los datos de la app por falta de espacio
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch(e) {}
+  // Guardar también justo cuando la app pasa a segundo plano o se cierra
+  const saveNow = () => { try { saveState(); } catch(e) {} };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
+  window.addEventListener('pagehide', saveNow);
+  // Aviso en iPhone cuando NO se abrió desde el ícono de inicio
+  try {
+    if (isIOSDevice() && !isStandaloneApp() && !sessionStorage.getItem('ios_warn_ok')) {
+      document.getElementById('ios-warn').style.display = 'block';
+    }
+  } catch(e) {}
+}
+
+function closeIosWarn() {
+  document.getElementById('ios-warn').style.display = 'none';
+  try { sessionStorage.setItem('ios_warn_ok', '1'); } catch(e) {}
+}
 
 // ── INICIO ────────────────────────────────────────────────────────────────────
 function startGame() {
