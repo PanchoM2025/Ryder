@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261107-006";
+const VERSION = "20261107-007";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -555,6 +555,8 @@ th.h-rose  { color:#ffb0d0 !important; }
     <button class="btn-start" onclick="startGame()">ANOTAR &nbsp;▶</button>
   </div>
   <button id="btn-prev" onclick="recoverPrev()">↺ Recuperar la partida anterior</button>
+  <div id="ver-foot" style="text-align:center;color:#888;font-size:11px;margin-top:18px;opacity:.8;"></div>
+  <script>document.addEventListener('DOMContentLoaded', () => { const v = document.getElementById('ver-foot'); if (v) v.textContent = 'Versión ' + VERSION; });</script>
 </div>
 
 <!-- ── GESTIONAR CANCHAS ── -->
