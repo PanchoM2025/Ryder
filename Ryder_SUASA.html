@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261107-005";
+const VERSION = "20261107-006";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -188,6 +188,10 @@ input.hv:focus { outline:2px solid #ffd700; }
   -webkit-user-select:none; user-select:none; white-space:nowrap;
 }
 .btn-start:active { background:#6a2a2a; }
+#btn-prev {
+  display:none; width:100%; margin-top:10px; padding:10px; background:transparent;
+  color:#c8c8e8; border:1px dashed #c8c8e8; border-radius:8px; font-size:13px; cursor:pointer;
+}
 
 /* ── MODAL INSTRUCCIONES ── */
 #modal-instrucciones {
@@ -550,6 +554,7 @@ th.h-rose  { color:#ffb0d0 !important; }
     <button class="btn-instrucciones" onclick="openInstructions()">📋 Instrucciones</button>
     <button class="btn-start" onclick="startGame()">ANOTAR &nbsp;▶</button>
   </div>
+  <button id="btn-prev" onclick="recoverPrev()">↺ Recuperar la partida anterior</button>
 </div>
 
 <!-- ── GESTIONAR CANCHAS ── -->
@@ -693,7 +698,7 @@ th.h-rose  { color:#ffb0d0 !important; }
     <div class="restore-players" id="restore-players-list"></div>
     <div class="restore-btn-row">
       <button class="btn-restore-continue" onclick="confirmRestore()">▶ Continuar<br><span style="font-size:11px;font-weight:normal">retomar la partida</span></button>
-      <button class="btn-restore-new" onclick="discardRestore()">✕ Nueva<br><span style="font-size:11px;font-weight:normal">borrar todo y empezar</span></button>
+      <button class="btn-restore-new" onclick="discardRestore()">✕ Nueva<br><span style="font-size:11px;font-weight:normal">empezar otra</span></button>
     </div>
   </div>
 </div>
@@ -847,7 +852,11 @@ let _savedHcpMode  = null;
 let _savedCourseKey = null;  // cancha de la partida al presionar Regresar
 
 // ── PERSISTENCIA ──────────────────────────────────────────────────────────────
+const PREV_KEY = 'ryder_suasa_prev';   // copia de la partida anterior (para "Recuperar")
+let _noSave = false;   // true si la partida guardada no se pudo abrir bien: no pisarla
+
 function saveState() {
+  if (_noSave) return;
   if (document.getElementById('scorecard').style.display === 'none') return;
   const scores = {};
   players.forEach((p, j) => {
@@ -910,14 +919,56 @@ function confirmRestore() {
   document.getElementById('sc-title').textContent = saved.courseName || '';
   document.getElementById('setup').style.display = 'none';
   document.getElementById('scorecard').style.display = 'block';
-  try { buildScorecard(); } catch(e) { console.error('confirmRestore buildScorecard:', e); }
+  try { buildScorecard(); } catch(e) { console.error('confirmRestore buildScorecard:', e); _noSave = true; }
   try { buildTeamSection(); } catch(e) { console.error('confirmRestore buildTeamSection:', e); }
   try { buildRyderMatchSection(); } catch(e) { console.error('confirmRestore buildRyderMatchSection:', e); }
   Object.entries(saved.scores || {}).forEach(([key, val]) => {
     const el = document.getElementById(`g${key}`);
     if (el) { el.value = cleanScore(val); el.dataset.prev = el.value; }
+    else _noSave = true;   // falta una casilla: no guardar encima de la partida buena
   });
   try { recalcAll(); } catch(e) { console.error('confirmRestore recalcAll:', e); }
+  if (_noSave) alert('No se pudo abrir bien la partida guardada.\nQueda guardada sin cambios: no cargues scores y avisá.');
+}
+
+function savedHasScores(s) {
+  return !!(s && s.players && s.players.length === 4 && s.course && s.scores && Object.keys(s.scores).length > 0);
+}
+function readSaved(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
+}
+
+// Copia la partida guardada a "anterior" (si tiene scores)
+function backupCurrent() {
+  const cur = readSaved(STATE_KEY);
+  try { if (savedHasScores(cur)) localStorage.setItem(PREV_KEY, JSON.stringify(cur)); } catch(e) {}
+}
+
+// Muestra "Recuperar la partida anterior" si hay una copia con scores
+function updatePrevBtn() {
+  const b = document.getElementById('btn-prev');
+  if (b) b.style.display = savedHasScores(readSaved(PREV_KEY)) ? 'block' : 'none';
+}
+
+// Vuelve a la partida anterior (la que se reemplazó al empezar una nueva).
+// La partida actual pasa a ser la "anterior", así no se pierde ninguna.
+function recoverPrev() {
+  const prev = readSaved(PREV_KEY);
+  if (!savedHasScores(prev)) { updatePrevBtn(); return; }
+  const cancha = prev.courseKey || courseKeyFromTitle(prev.courseName);
+  const quienes = prev.players.map(p => p.ini).join(', ');
+  if (!confirm('¿Recuperar la partida anterior?\n\n' + cancha + '\n' + quienes)) return;
+  const cur = readSaved(STATE_KEY);
+  try {
+    if (savedHasScores(cur)) localStorage.setItem(PREV_KEY, JSON.stringify(cur));
+    else localStorage.removeItem(PREV_KEY);
+  } catch(e) {}
+  _pendingScores = null;
+  _noSave = false;
+  _pendingSavedState = prev;
+  confirmRestore();
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(prev)); saveState(); } catch(e) {}
+  updatePrevBtn();
 }
 
 // Completa la 1° pantalla con los jugadores, la cancha y los HCP de hoyos de la partida
@@ -946,7 +997,9 @@ function fillSetupFromGame() {
 function discardRestore() {
   document.getElementById('modal-restore').classList.remove('open');
   _pendingSavedState = null;
-  try { localStorage.removeItem(STATE_KEY); } catch(e) {}
+  // No se borra: la partida guardada sigue ahí hasta que se toque ANOTAR con una nueva
+  backupCurrent();
+  updatePrevBtn();
   // setup ya está visible por default, solo asegurarse
   document.getElementById('setup').style.display = 'block';
   document.getElementById('scorecard').style.display = 'none';
@@ -1062,6 +1115,7 @@ function populateHcpTable() {
 
   populateHcpTable();
   restoreState();
+  updatePrevBtn();
   setupStorageSafety();
 })();
 
@@ -1159,6 +1213,9 @@ function selectHcpMode(mode) {
 }
 
 function finishStartGame() {
+  // Partida nueva: la que estaba guardada pasa a "anterior" (se puede recuperar)
+  if (_pendingScores === null) backupCurrent();
+  _noSave = false;
   // Cambiar pantalla PRIMERO para que cualquier error en los builds
   // no deje al usuario atrapado en el setup
   document.getElementById('setup').style.display = 'none';
@@ -1195,6 +1252,7 @@ function finishStartGame() {
     recalcAll();
   }
   saveState();
+  updatePrevBtn();
 }
 
 // ── SCORECARD ─────────────────────────────────────────────────────────────────
@@ -2158,11 +2216,13 @@ function goBack() {
 }
 
 function newGame() {
+  if (!confirm('¿Empezar una partida nueva?\n\nLa tarjeta actual queda guardada hasta que toques ANOTAR, y después se puede recuperar con "Recuperar la partida anterior".')) return;
   _pendingScores = null;
   _savedCourseKey = null;
   _savedGameMode = null;
   _savedHcpMode  = null;
-  try { localStorage.removeItem(STATE_KEY); } catch(e) {}
+  // No se borra lo guardado: se reemplaza recién al empezar la partida nueva
+  backupCurrent();
   for (let i = 0; i < 4; i++) {
     const ini = document.getElementById(`ini${i}`);
     const hcp = document.getElementById(`hcp${i}`);
@@ -2171,6 +2231,7 @@ function newGame() {
   }
   document.getElementById('scorecard').style.display = 'none';
   document.getElementById('setup').style.display = 'block';
+  updatePrevBtn();
   window.scrollTo(0, 0);
 }
 </script>
