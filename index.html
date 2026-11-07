@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261107-001";
+const VERSION = "20261107-002";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -294,6 +294,10 @@ tr.r-aag   td.c-player, tr.r-aag   td.c-team, tr.r-aag   td.c-match { font-size:
 /* ── Netos acumulados (filas intercaladas) e Ida/Vuelta neto ── */
 tr.r-acc  td { background:#0a0a20; color:#ffd700; font-size:17px; font-weight:bold; padding:4px 2px; border-bottom:1px solid #333360; }
 tr.r-acc  td.acc-0 { color:#666; font-weight:normal; }
+/* Línea de diferencia en la tarjeta de arriba (debajo del último hoyo cargado) */
+tr.r-scacc td { background:#3a2e00; border-top:1px solid #ffd700; border-bottom:2px solid #ffd700; }
+tr.r-scacc td.lbl { font-size:12px; color:#ffd700; padding-left:6px; }
+tr.r-scacc td.acc-0 { color:#c8b060; font-size:14px; }
 input.g.bad { outline:2px solid #ff3b30 !important; }
 tr.r-neto td { background:#0a0a20; color:#ffd700; font-weight:bold; border-top:2px solid #ffd700; border-bottom:2px solid #ffd700; }
 tr.r-neto td.c-team, tr.r-neto td.c-match { font-size:19px; }
@@ -1267,6 +1271,11 @@ function buildScorecard() {
         if (otro) { this.value = 'X'; this.dataset.prev = 'X'; recalcAll(); }
       });
     });
+    // Línea intercalada con la diferencia acumulada del fourball.
+    // Solo se ve debajo del último hoyo cargado; la llena scAccShow.
+    const tra = document.createElement('tr');
+    tra.className = 'r-acc r-scacc'; tra.id = `scacc_${h}`; tra.style.display = 'none';
+    tbody.appendChild(tra);
   }
 
   function addSubRow(label, css, parSum, mkId) {
@@ -1290,6 +1299,33 @@ function buildScorecard() {
   addResultRow('STABLEFORD','r-stbl', j=>`stbl_${j}`);
   addResultRow('AAG',       'r-aag',  j=>`aag_${j}`);
   setupStickyHeader();
+}
+
+// ── LÍNEA DE DIFERENCIA EN LA TARJETA DE ARRIBA ─────────────────────────────
+// Muestra, debajo del último hoyo cargado, la misma diferencia acumulada del
+// fourball que la tabla de abajo, para no tener que bajar la pantalla en cada hoyo.
+// h = hoyo (0..17) o null para ocultarla. cells = [{text, span, cls}].
+function scAccShow(h, cells) {
+  for (let k = 0; k < 18; k++) {
+    const tr = document.getElementById(`scacc_${k}`);
+    if (tr && k !== h) tr.style.display = 'none';
+  }
+  if (h === null || h === undefined || !cells) return;
+  const tr = document.getElementById(`scacc_${h}`);
+  if (!tr) return;
+  let html = `<td class="lbl" colspan="3">${h < 9 ? 'Dif. Ida' : 'Dif. Vuelta'}</td>`;
+  cells.forEach(c => html += `<td class="c-player ${c.cls || ''}" colspan="${c.span || 1}">${c.text}</td>`);
+  tr.innerHTML = html;
+  tr.style.display = '';
+}
+
+// Celdas para los dos equipos. spans = cuántas columnas de jugador ocupa cada uno.
+function scAccCells2(acc, spans) {
+  if (acc[0] === acc[1]) return [{ text: 'EMPATE', span: spans[0] + spans[1], cls: 'acc-0' }];
+  const d = Math.abs(acc[0] - acc[1]), gana = acc[0] > acc[1] ? 0 : 1;
+  return [0, 1].map(i => i === gana
+    ? { text: `+${d}`, span: spans[i] }
+    : { text: '—', span: spans[i], cls: 'acc-0' });
 }
 
 // ── FOURBALL: TINTO vs ROSÉ ───────────────────────────────────────────────────
@@ -1353,10 +1389,8 @@ function buildTeamSection() {
   addTeamRow('Neto Vuelta', 'ta_nb9','tb_nb9','r-nsum');
   addTeamRow('TOTAL',  'ta_tot','tb_tot','r-total');
   addTeamRow('Neto Total',  'ta_ntot','tb_ntot','r-nsum');
-  // Tres resultados, igual que el 4-2-0: Ida, Vuelta y Match (ida + vuelta)
-  addTeamRow('Dif. Ida',    'ta_dF', 'tb_dF', 'r-diff');
-  addTeamRow('Dif. Vuelta', 'ta_dB', 'tb_dB', 'r-sub');
-  addTeamRow('Dif. Match',  'ta_dif','tb_dif','r-sub');
+  // Ida y Vuelta ya muestran su diferencia; acá queda el resultado del Match (ida + vuelta)
+  addTeamRow('Dif. Match',  'ta_dif','tb_dif','r-diff');
 }
 
 function calcHoleTeam(h) {
@@ -1405,6 +1439,7 @@ function recalcTeam() {
   // Se siguen cargando y mostrando todos los hoyos; solo se marca en qué hoyo quedó definido.
   const maxPorHoyo = gameMode === '1y2' ? 3 : 1;
   let jugados = 0, sumA = 0, sumB = 0, definidoEn = null;
+  let last = null;   // último hoyo cargado, para la línea de la tarjeta de arriba
   for (let h=0; h<18; h++) {
     if (h===9) { accA=0; accB=0; }   // la vuelta acumula independiente
     const pts = calcHoleTeam(h);
@@ -1420,6 +1455,7 @@ function recalcTeam() {
     if (!pts) { tdA.textContent='·'; tdB.textContent='·'; continue; }
     applyTeam(tdA,pts[0]); applyTeam(tdB,pts[1]);
     accA += pts[0]; accB += pts[1];
+    last = { h, acc: [accA, accB] };
     if (trAcc) {
       pintaNeto(document.getElementById(`taa_${h}`), accA-accB, 'c-team', true);
       pintaNeto(document.getElementById(`tba_${h}`), accB-accA, 'c-team', true);
@@ -1428,12 +1464,9 @@ function recalcTeam() {
     if (h<9) { f9A+=pts[0]; f9B+=pts[1]; f9ok=true; }
     else     { b9A+=pts[0]; b9B+=pts[1]; b9ok=true; }
   }
+  // Tarjeta de arriba: Tinto = jugadores 1 y 2, Rosé = jugadores 3 y 4
+  scAccShow(last ? last.h : null, last ? scAccCells2(last.acc, [2, 2]) : null);
   const setTd=(id,val)=>{const el=document.getElementById(id);if(el){el.textContent=val;el.className='c-team';}};
-  // Ida / Vuelta: neto acumulado de cada nueve
-  pintaNeto(document.getElementById('ta_f9'), f9A-f9B, 'c-team', f9ok);
-  pintaNeto(document.getElementById('tb_f9'), f9B-f9A, 'c-team', f9ok);
-  pintaNeto(document.getElementById('ta_b9'), b9A-b9B, 'c-team', b9ok);
-  pintaNeto(document.getElementById('tb_b9'), b9B-b9A, 'c-team', b9ok);
   const any=f9ok||b9ok, totA=f9A+b9A, totB=f9B+b9B;
   setTd('ta_tot',any?totA:'—'); setTd('tb_tot',any?totB:'—');
   const pintaDif = (idA, idB, a, b, ok) => {
@@ -1448,8 +1481,9 @@ function recalcTeam() {
       dA.textContent='—'; dB.textContent=`+${b-a}`; dB.className+=' tc-2';
     }
   };
-  pintaDif('ta_dF', 'tb_dF',  f9A,  f9B,  f9ok);
-  pintaDif('ta_dB', 'tb_dB',  b9A,  b9B,  b9ok);
+  // Filas Ida y Vuelta: diferencia acumulada de cada nueve (+N / EMPATE)
+  pintaDif('ta_f9', 'tb_f9',  f9A,  f9B,  f9ok);
+  pintaDif('ta_b9', 'tb_b9',  b9A,  b9B,  b9ok);
   pintaDif('ta_dif','tb_dif', totA, totB, any);
   // Neto acumulado de cada jugador (Ida / Vuelta), se va sumando a medida que se cargan scores.
   // Formato por equipo: "neto 1° jugador · neto 2° jugador". * = levantó algún hoyo (no suma).
