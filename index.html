@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261107-004";
+const VERSION = "20261107-005";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -1295,6 +1295,10 @@ function buildScorecard() {
 
   for (let h=0; h<9; h++) addHole(h);
   addSubRow('Ida',    'r-sub', course.slice(0,9).reduce((s,[p])=>s+p,0), j=>`f9_${j}`);
+  // Línea dorada fija con el resultado de la ida (la llena scAccShow)
+  const trIdaAcc = document.createElement('tr');
+  trIdaAcc.className = 'r-acc r-scacc'; trIdaAcc.id = 'scacc_ida'; trIdaAcc.style.display = 'none';
+  tbody.appendChild(trIdaAcc);
   for (let h=9; h<18; h++) addHole(h);
   addSubRow('Vuelta', 'r-sub', course.slice(9).reduce((s,[p])=>s+p,0),  j=>`b9_${j}`);
   addSubRow('TOTAL',  'r-total', course.reduce((s,[p])=>s+p,0),          j=>`tot_${j}`);
@@ -1308,18 +1312,32 @@ function buildScorecard() {
 // Muestra, debajo del último hoyo cargado, la misma diferencia acumulada del
 // fourball que la tabla de abajo, para no tener que bajar la pantalla en cada hoyo.
 // h = hoyo (0..17) o null para ocultarla. cells = [{text, span, cls}].
-function scAccShow(h, cells) {
+// last = último hoyo cargado {h, acc}; lastIda = último hoyo cargado de la ida.
+// cellsFn(acc) arma las celdas [{text, span, cls}].
+// La línea que baja no se pone en el hoyo 9: ahí terminó la ida y su resultado
+// queda fijo debajo de la fila "Ida" (también durante toda la vuelta).
+function scAccFill(tr, label, cells) {
+  let html = `<td class="lbl" colspan="3">${label}</td>`;
+  cells.forEach(c => html += `<td class="c-player ${c.cls || ''}" colspan="${c.span || 1}">${c.text}</td>`);
+  tr.innerHTML = html;
+  tr.style.display = '';
+}
+
+function scAccShow(last, lastIda, cellsFn) {
+  const h = last && last.h !== 8 ? last.h : null;
   for (let k = 0; k < 18; k++) {
     const tr = document.getElementById(`scacc_${k}`);
     if (tr && k !== h) tr.style.display = 'none';
   }
-  if (h === null || h === undefined || !cells) return;
-  const tr = document.getElementById(`scacc_${h}`);
-  if (!tr) return;
-  let html = `<td class="lbl" colspan="3">${h < 9 ? 'Dif. Ida' : 'Dif. Vuelta'}</td>`;
-  cells.forEach(c => html += `<td class="c-player ${c.cls || ''}" colspan="${c.span || 1}">${c.text}</td>`);
-  tr.innerHTML = html;
-  tr.style.display = '';
+  if (h !== null) {
+    const tr = document.getElementById(`scacc_${h}`);
+    if (tr) scAccFill(tr, h < 9 ? 'Dif. Ida' : 'Dif. Vuelta', cellsFn(last.acc));
+  }
+  const trIda = document.getElementById('scacc_ida');
+  if (trIda) {
+    if (last && last.h >= 8 && lastIda) scAccFill(trIda, 'Dif. Ida', cellsFn(lastIda.acc));
+    else trIda.style.display = 'none';
+  }
 }
 
 // Celdas para los dos equipos. spans = cuántas columnas de jugador ocupa cada uno.
@@ -1442,7 +1460,7 @@ function recalcTeam() {
   // Se siguen cargando y mostrando todos los hoyos; solo se marca en qué hoyo quedó definido.
   const maxPorHoyo = gameMode === '1y2' ? 3 : 1;
   let jugados = 0, sumA = 0, sumB = 0, definidoEn = null;
-  let last = null;   // último hoyo cargado, para la línea de la tarjeta de arriba
+  let last = null, lastIda = null;   // último hoyo cargado (y de la ida), para la línea de la tarjeta de arriba
   for (let h=0; h<18; h++) {
     if (h===9) { accA=0; accB=0; }   // la vuelta acumula independiente
     const pts = calcHoleTeam(h);
@@ -1459,6 +1477,7 @@ function recalcTeam() {
     applyTeam(tdA,pts[0]); applyTeam(tdB,pts[1]);
     accA += pts[0]; accB += pts[1];
     last = { h, acc: [accA, accB] };
+    if (h < 9) lastIda = last;
     if (trAcc) {
       pintaNeto(document.getElementById(`taa_${h}`), accA-accB, 'c-team', true);
       pintaNeto(document.getElementById(`tba_${h}`), accB-accA, 'c-team', true);
@@ -1468,7 +1487,7 @@ function recalcTeam() {
     else     { b9A+=pts[0]; b9B+=pts[1]; b9ok=true; }
   }
   // Tarjeta de arriba: Tinto = jugadores 1 y 2, Rosé = jugadores 3 y 4
-  scAccShow(last ? last.h : null, last ? scAccCells2(last.acc, [2, 2]) : null);
+  scAccShow(last, lastIda, acc => scAccCells2(acc, [2, 2]));
   const setTd=(id,val)=>{const el=document.getElementById(id);if(el){el.textContent=val;el.className='c-team';}};
   const any=f9ok||b9ok, totA=f9A+b9A, totB=f9B+b9B;
   setTd('ta_tot',any?totA:'—'); setTd('tb_tot',any?totB:'—');
