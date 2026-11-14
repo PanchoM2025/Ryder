@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261113-001";
+const VERSION = "20261113-002";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -455,6 +455,20 @@ th.h-rose  { color:#ffb0d0 !important; }
   cursor:pointer; touch-action:manipulation; line-height:1.3;
 }
 .btn-restore-new:active { background:#6a2a2a; }
+
+/* ── Tarjeta: H/Par/HCP al mínimo, columnas de jugadores al máximo (20261113-002) ── */
+table.sc { width:100%; }
+table.sc th.c-fix, table.sc td.c-fix { width:24px; max-width:24px; padding-left:0; padding-right:0; font-size:14px; }
+table.sc th.c-fix { font-size:10px; }
+table.sc th.c-player, table.sc td.c-player,
+table.sc th.c-team,   table.sc td.c-team,
+table.sc th.c-p420,   table.sc td.c-p420,
+table.sc th.c-match,  table.sc td.c-match,
+table.sc th.c-s1,     table.sc td.c-s1 { width:auto; }
+#sc-tbl td.c-player { padding:3px 3px; }
+#sc-tbl input.g { width:100%; height:50px; font-size:30px; border-radius:9px; padding:0; box-sizing:border-box; }
+#sc-tbl td.lbl { font-size:13px; padding-left:3px; }
+#tbl-ryder-match th.c-fix, #tbl-ryder-match td.c-fix { width:18px; max-width:18px; }
 </style>
 </head>
 <body>
