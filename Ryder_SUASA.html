@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── VERSION — cambiar este número antes de cada deploy ──────────────────────
-const VERSION = "20261107-008";
+const VERSION = "20261113-001";
 (function() {
   fetch(location.pathname + '?_nc=' + Date.now(), { cache: 'no-store' })
     .then(r => r.text())
@@ -857,6 +857,38 @@ let _savedCourseKey = null;  // cancha de la partida al presionar Regresar
 const PREV_KEY = 'ryder_suasa_prev';   // copia de la partida anterior (para "Recuperar")
 let _noSave = false;   // true si la partida guardada no se pudo abrir bien: no pisarla
 
+// ── Misma partida: no dejar como "anterior" una copia de la partida que se está jugando ──
+let _gameId = null;   // número único de cada partida (se crea al empezar una nueva)
+function newGameId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function scoresPorJugador(s) {
+  const m = {};
+  Object.entries(s.scores || {}).forEach(([k, v]) => {
+    const [j, h] = k.split('_');
+    const p = (s.players || [])[+j];
+    if (p) m[p.ini + '|' + h] = String(v);
+  });
+  return m;
+}
+// true si "b" es la misma partida que "a" (o la continuación)
+function mismaPartida(a, b) {
+  if (!a || !b || !a.players || !b.players) return false;
+  if (a.gameId && b.gameId) return a.gameId === b.gameId;
+  // Partidas guardadas antes de tener número: misma cancha, mismos jugadores
+  // y todos los scores de "a" iguales en "b"
+  const ca = a.courseKey || courseKeyFromTitle(a.courseName);
+  const cb = b.courseKey || courseKeyFromTitle(b.courseName);
+  if (ca !== cb) return false;
+  const ia = a.players.map(p => p.ini).sort().join(','), ib = b.players.map(p => p.ini).sort().join(',');
+  if (ia !== ib) return false;
+  const sa = scoresPorJugador(a), sb = scoresPorJugador(b);
+  const ks = Object.keys(sa);
+  return ks.length > 0 && ks.every(k => sb[k] === sa[k]);
+}
+// Si la "anterior" es la misma partida que se acaba de abrir, se borra (no sirve recuperarla)
+function dropPrevIfSame(s) {
+  try { if (mismaPartida(readSaved(PREV_KEY), s)) localStorage.removeItem(PREV_KEY); } catch(e) {}
+}
+
 function saveState() {
   if (_noSave) return;
   if (document.getElementById('scorecard').style.display === 'none') return;
@@ -870,7 +902,8 @@ function saveState() {
   try { localStorage.setItem(STATE_KEY, JSON.stringify({
     courseName: document.getElementById('sc-title').textContent,
     courseKey: _tmpCourseName,
-    players, course, scores, gameMode, hcpMode
+    players, course, scores, gameMode, hcpMode,
+    gameId: _gameId || (_gameId = newGameId())
   })); } catch(e) {}
 }
 
@@ -909,6 +942,7 @@ function confirmRestore() {
   hcpMode  = saved.hcpMode  || 'completo';
   const courseKey = saved.courseKey || courseKeyFromTitle(saved.courseName);
   _tmpCourseName = courseKey;
+  _gameId = saved.gameId || newGameId();
   // Se usan los hoyos con los que se jugó la partida (no los HCP guardados de la cancha)
   if (Array.isArray(saved.course) && saved.course.length === 18) {
     course = saved.course;
@@ -930,6 +964,8 @@ function confirmRestore() {
     else _noSave = true;   // falta una casilla: no guardar encima de la partida buena
   });
   try { recalcAll(); } catch(e) { console.error('confirmRestore recalcAll:', e); }
+  dropPrevIfSame(saved);   // volvió a la misma partida: la copia vieja ya no hace falta
+  updatePrevBtn();
   if (_noSave) alert('No se pudo abrir bien la partida guardada.\nQueda guardada sin cambios: no cargues scores y avisá.');
 }
 
@@ -1216,7 +1252,7 @@ function selectHcpMode(mode) {
 
 function finishStartGame() {
   // Partida nueva: la que estaba guardada pasa a "anterior" (se puede recuperar)
-  if (_pendingScores === null) backupCurrent();
+  if (_pendingScores === null) { backupCurrent(); _gameId = newGameId(); }
   _noSave = false;
   // Cambiar pantalla PRIMERO para que cualquier error en los builds
   // no deje al usuario atrapado en el setup
